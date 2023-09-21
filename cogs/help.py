@@ -7,12 +7,12 @@ class HelpCog(commands.Cog):
     
     def __init__(self, bot: commands.Bot):
         self.bot = bot 
-        
+        self.hidden_cogs = ['CommandsErrors', 'HelpCog']
     
     @commands.command(
         name='help',
         description='Veja todos os meus comandos disponíveis.',
-        usage="teste"
+        hidden=True
     )
     async def ajuda(self, ctx: commands.Context, command_name: str = None):
         
@@ -20,9 +20,12 @@ class HelpCog(commands.Cog):
             
             embed = discord.Embed(title="My commands", description=f"Use `{self.bot.command_prefix}help <command_name>` para obter informações adicionais sobre tal comando.",color=0x800080)
             
-            for cog in self.bot.cogs:
+            cogs = [x for x in self.bot.cogs if x not in self.hidden_cogs]
+            
+            for cog in cogs:
                 
                 text = ""
+                
                 for command in self.bot.get_cog(cog).get_commands():
                     text += f"`{command.name}`"
             

@@ -1,6 +1,7 @@
 from discord.ext import commands 
 import discord 
 import typing 
+from src.views.SocialViews import UiView
 
 
 class SocialCommands(commands.Cog, name="Social"):
@@ -13,7 +14,7 @@ class SocialCommands(commands.Cog, name="Social"):
     def __init__(self, bot: commands.Bot):
         self.bot = bot 
     
-    
+    @commands.cooldown(1, 10, type=commands.BucketType.user)
     @commands.command(
         name = 'userinfo',
         description = "`Informações sobre você ou um usuário qualquer.`",
@@ -22,10 +23,13 @@ class SocialCommands(commands.Cog, name="Social"):
     )
     async def infouser(self,
                        ctx: commands.Context,
-                       user: typing.Union[discord.User, discord.Member] = None):
+                       user: discord.Member = None):
         
         if user is None:
             user = ctx.author 
+            
+        if user == self.bot.user:
+            return
         
         
         embed = discord.Embed(
@@ -39,9 +43,12 @@ class SocialCommands(commands.Cog, name="Social"):
                         value=f"`{user.id}`",
                         inline=True)
 
-        embed.add_field(name="Joined at",
-                        value=user.joined_at.strftime('%d/%m/%Y às %H:%M'))
-        return await ctx.reply(embed=embed, ephemeral=True)
+        embed.add_field(name="Entrou há",
+                        value=f"<t:{int(user.joined_at.timestamp())}:f>"
+                    )
+        
+        
+        return await ctx.reply(embed=embed, view=UiView(user=user))
 
 
 async def setup(bot: commands.Bot):
