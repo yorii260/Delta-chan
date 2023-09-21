@@ -1,5 +1,7 @@
-*.env.staging
-*.env 
 *.env.local
+*env.staging
+*env
 
-*__pycache__
+__pycache__
+cogs/__pycache__
+helpers/__pycache__

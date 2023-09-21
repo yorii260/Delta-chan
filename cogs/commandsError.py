@@ -20,10 +20,10 @@ class CommandsErrors(commands.Cog):
             for role in error.missing_permissions:
                 perms += f"`{role.replace('_', ' ').capitalize()}`"
             
-            return await ctx.reply(f'Você precisa {f"das permissões para usar este comando: {perms}" if len(error.missing_permissions) > 1 else f"da permissão {perms} para usar este comando."}')
+            return await ctx.reply(f'Você precisa {f"das __seguintes__ permissões para usar este comando: {perms}" if len(error.missing_permissions) > 1 else f"da permissão {perms} para usar este comando."}')
 
         elif isinstance(error, commands.NoPrivateMessage):
-            return await ctx.send('Você não pode usar este comando das mensagens privadas.')
+            return await ctx.send('Você não pode usar este comando nas mensagens privadas.')
 
         
         elif isinstance(error, commands.CommandOnCooldown):
@@ -36,7 +36,7 @@ class CommandsErrors(commands.Cog):
             for role in error.missing_permissions:
                 perm += f"`{role.replace('_','').capitalize()}`"
             
-            return await ctx.reply(f'Você precisa {f"das permissões para usar este comando: {perm}" if len(error.missing_permissions) > 1 else f"da permissão {perm} para usar este comando."}')
+            return await ctx.reply(f'Eu preciso {f"das __seguintes__ permissões para usar este comando: {perm}" if len(error.missing_permissions) > 1 else f"da permissão {perm} para usar este comando."}')
             
 
 async def setup(bot: commands.Bot):
