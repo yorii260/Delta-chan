@@ -3,8 +3,10 @@ from discord.ext import commands
 from discord import Intents 
 import config
 
+
 cogs = ['social', 'help',
-        'moderation', 'commandsError']
+        'moderation', 'commandsError',
+        'mongo']
 
 class Delta(commands.Bot): 
     
@@ -41,12 +43,18 @@ class Delta(commands.Bot):
     
     
     async def on_ready(self) -> None:
-        print(f"Online on user {self.user.name}\n{round(self.latency*100)} ms")
+        print(f"Online on user {self.user.name}\n{round(self.latency*100)} ms.")
         await self.delta_activity()
     
     async def delta_activity(self):
         activity = discord.Streaming(name='d.help', url='https://twitch.tv/glz007', game='Discord')
         await self.change_presence(status=discord.Status.online if not self.maintenance else discord.Status.dnd, activity=activity)
+    
+    
+    @property
+    def mongo(self):
+        return self.get_cog("Mongo")
+    
     
     
 if __name__ == '__main__':

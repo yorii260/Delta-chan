@@ -1,9 +1,9 @@
+from typing import Any, Coroutine
 import discord 
-
 
 class BanView(discord.ui.View):
     
-    def __init__(self, data, timeout=180):
+    def __init__(self, data, timeout=60):
         self.data = data 
         super().__init__(timeout=timeout)
     
@@ -15,9 +15,9 @@ class BanView(discord.ui.View):
     )
     async def ban_confirm(self, interaction: discord.Interaction, button: discord.ui.Button):
         
-        user, reason = self.data 
+        user, ctx, reason = self.data 
         
-        em = discord.Embed(title='Ban sucessfull',
+        em = discord.Embed(title='Ban realizado com sucesso',
                            color=0x800080,
                            description=f"O usuário `{user.name}` foi banido com sucesso!\nMotivo: `{reason}`")
         
@@ -35,6 +35,8 @@ class BanView(discord.ui.View):
         return await interaction.response.edit_message(embed=em, view=None)
 
 
-    def on_timeout(self):
-        self.stop()
-        super().on_timeout()
+    async def interaction_check(self, interaction: discord.Interaction):
+        if interaction.user.id != self.data[1].author.id:
+            return False 
+        else:
+            return True

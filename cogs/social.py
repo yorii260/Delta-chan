@@ -48,7 +48,7 @@ class SocialCommands(commands.Cog, name="Social"):
                     )
         
         
-        return await ctx.reply(embed=embed, view=UiView(user=user))
+        return await ctx.reply(embed=embed, view=UiView(user=user, ctx=ctx))
 
 
 async def setup(bot: commands.Bot):

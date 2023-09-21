@@ -1,10 +1,11 @@
-import discord 
-
+import discord
+from discord.ext import commands
 
 class UiView(discord.ui.View):
     
-    def __init__(self, user: discord.User, timeout=180):
+    def __init__(self, user: discord.User, ctx: commands.Context, timeout=30):
         self.user = user 
+        self.ctx = ctx
         super().__init__(timeout=timeout)
             
     @discord.ui.button(label='Avatar', custom_id='avatar_button', style=discord.ButtonStyle.green)
@@ -16,7 +17,11 @@ class UiView(discord.ui.View):
         return await interaction.response.send_message(embed=em, ephemeral=True)
 
     
-    async def on_timeout(self):
-        return self.stop()
+    async def interaction_check(self, interaction: discord.Interaction):
+        if interaction.user.id != self.ctx.author.id:
+            return False
+        else:
+            return True
+        
     
     
