@@ -40,3 +40,40 @@ class BanView(discord.ui.View):
             return False 
         else:
             return True
+
+
+class ConfirmEditWarn(discord.ui.View):
+    
+    def __init__(self, ctx, timeout=30):
+        self.ctx = ctx 
+        super().__init__(timeout=timeout)
+    
+    
+    @discord.ui.button(label="Confirmar",
+                       style=discord.ButtonStyle.green,
+                       custom_id="confirm_edit_warn_buttton")
+    async def c_button(self, interaction: discord.Interaction, button: discord.ui.Button):
+        em = discord.Embed(title='Edição feita com sucesso!', color=0x00FF00)
+        em.set_thumbnail(url=self.ctx.author.avatar.url)
+        
+        return await interaction.response.edit_message(embed=em, view=None)
+
+    
+    @discord.ui.button(label="Cancelar",
+                       style=discord.ButtonStyle.red,
+                       custom_id="cancel_edit_warn_buttton")
+    async def cc_button(self, interaction: discord.Interaction, button: discord.ui.Button):
+        em = discord.Embed(title='Edição cancelada com sucesso!', color=0xff0000)
+        em.set_thumbnail(url=self.ctx.author.avatar.url)
+        
+        return await interaction.response.edit_message(embed=em, view=None)
+    
+    
+    async def interaction_check(self, interaction: discord.Interaction):
+        
+        if interaction.user != self.ctx.author:
+            return False 
+        else:
+            return True
+
+        

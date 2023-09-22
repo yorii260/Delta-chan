@@ -1,6 +1,6 @@
 from discord.ext import commands 
 import discord
-from src.views.moderation_views import BanView
+from src.views.moderation_views import BanView, ConfirmEditWarn
 
 
 class Moderation(commands.Cog):
@@ -117,6 +117,30 @@ class Moderation(commands.Cog):
         
         if r is not None:
             return await ctx.reply(f"O warn `{warn_id}` foi removido com sucesso.")
+    
+    
+    @commands.has_guild_permissions(administrator=True)
+    @commands.guild_only()
+    @commands.command(
+        name='edit_warn',
+        description="Edite o motivo de um warn usando o ID",
+        usage="d.ew <warn id> <new reason>",
+        aliases=("ew",)
+    )
+    async def edit_warn(self, ctx: commands.Context, warn_id: str, *, new_reason: str):
+        
+        w = self.bot.mongo.warns.find_one({"warn_id": warn_id})
+        
+        if w is None:
+            return await ctx.reply(f"`{warn_id}` é um id inválido, você digitou corretamente ou esse warn existe?")
+
+        embed = discord.Embed(title="Confirme a edição",
+                              description=f"Ao confirmar a reason da warn do usuário <@{w['id_']}> passará de `{w['motivo']}` para `{new_reason}`\nVocê confirma esta ação?",
+                              color=0x800080)
+
+        await ctx.send(embed=embed, view=ConfirmEditWarn(ctx))
+        
+        return self.bot.mongo.warns.update_one({"warn_id": warn_id}, {"$set": {"motivo": new_reason}})
     
     
 async def setup(bot: commands.Bot):

@@ -84,29 +84,29 @@ class SocialCommands(commands.Cog, name="Social"):
     @commands.command(name='remind',
                       description='Adicione um lembrete e eu irei te lembrar!',
                       aliases=("rm",))
-    async def remind(self, ctx: commands.Context):
+    async def remind(self, ctx: commands.Context, time: int, *, reminder: str):
         
-        r = self.bot.mongo.users.find_one({"id_": ctx.author.id})
+        increment = datetime.now() + timedelta(minutes=time)
+        embed = discord.Embed(title="Lembrete registrado!", description=f"Pode ficar tranquilo(a) que eu irei te avisar!\nTe vejo em <t:{int(increment.now().timestamp())}:f>",
+                              color=0x800080)
+        embed.set_thumbnail(url=ctx.author.avatar.url)
         
-        if r is not None:
-            
-            await ctx.reply(f"Eu irei te lembrar em <t:{int(datetime.now().timestamp())}:f>")
-            
-            increment = datetime.now() + timedelta(seconds=20) 
-            return self.bot.mongo.reminders.insert_one(
-                {"reminder": 
-                    {
-                        "user_id": ctx.author.id,
-                        "channel_id": ctx.channel.id,
-                        "remind": "tetse",
-                        "in": increment,
-                        "last_check": False
-                    }
+        await ctx.reply(embed=embed)
+        
+         
+        return self.bot.mongo.reminders.insert_one(
+            {"reminder": 
+                {
+                    "user_id": ctx.author.id,
+                    "channel_id": ctx.channel.id,
+                    "remind": reminder,
+                    "in": increment,
+                    "last_check": datetime.now()
                 }
-                )
-        else:
-            return await ctx.send("Você não está registrado no bot.")
+            }
+            )
     
-    
+                
+        
 async def setup(bot: commands.Bot):
     await bot.add_cog(SocialCommands(bot))

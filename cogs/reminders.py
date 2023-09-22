@@ -27,7 +27,7 @@ class Reminder(commands.Cog):
             id_ = reminders[0]
             date = datetime.fromisoformat(str(date))
             
-            print(current_time-date)
+           
             if current_time >= date:
                 
                 await asyncio.sleep(1.5)
