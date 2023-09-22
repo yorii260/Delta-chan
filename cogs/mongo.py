@@ -12,11 +12,26 @@ class Mongo(commands.Cog):
         self.client = pymongo.MongoClient(os.getenv('MONGO_URL'))
         self.db = self.client.get_database('Delta')
         
-        self.warns = self.db.get_collection('GUILD_WARNS')
-        self.bans = self.db.get_collection("GUILD_BANS")
-        self.users = self.db.get_collection("GUILD_USERS")
-        self.guild = self.db.get_collection("GUILD_CONFIG")
         
+    @property
+    def users(self):
+        return self.db.get_collection("GUILD_USERS")
+
+    
+    @property
+    def warns(self):
+        return self.db.get_collection('GUILD_WARNS')
+    
+    
+    @property
+    def bans(self):
+        return self.db.get_collection("GUILD_BANS")
+    
+    
+    @property
+    def guild(self):
+        return self.db.get_collection("GUILD_CONFIG")
+    
     
     @commands.Cog.listener()
     async def on_message(self, message: discord.Message):
@@ -35,7 +50,10 @@ class Mongo(commands.Cog):
                 return self.users.insert_one({
                     "id_": user.id, 
                     "nickname": user.name, 
-                    "avatar_url": user.avatar.url
+                    "avatar_url": user.avatar.url,
+                    "reminders": [],
+                    "afk": False,
+                    "reminders_count": 0
                 })
                 
             
@@ -51,6 +69,14 @@ class Mongo(commands.Cog):
         
         return check 
 
+    
+    def update_user(self, user: discord.Member | int, update):
+        
+        if type(user) == int:
+            return self.users.find_one_and_update({"id_": user}, update)
+        else:
+            return self.users.find_one_and_update({"id_": user.id}, update)
+    
     
     async def insert_warn(self, user: discord.Member, moderator: discord.Member, reason: str):
         

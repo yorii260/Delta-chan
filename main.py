@@ -5,7 +5,7 @@ import config
 
 cogs = ['social', 'help',
         'moderation', 'commandsError',
-        'mongo']
+        'mongo', 'reminders']
 
 class Delta(commands.Bot): 
     
