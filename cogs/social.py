@@ -1,8 +1,8 @@
 from discord.ext import commands 
 import discord 
-import typing 
+from helpers import utils
 from src.views.SocialViews import UiView
-
+import random
 
 class SocialCommands(commands.Cog, name="Social"):
     
@@ -13,8 +13,10 @@ class SocialCommands(commands.Cog, name="Social"):
     
     def __init__(self, bot: commands.Bot):
         self.bot = bot 
+        self.emotes = utils.Emotes()
+        
     
-    @commands.cooldown(1, 10, type=commands.BucketType.user)
+    #@commands.cooldown(1, 10, type=commands.BucketType.user)
     @commands.command(
         name = 'userinfo',
         description = "`Informações sobre você ou um usuário qualquer.`",
@@ -50,6 +52,34 @@ class SocialCommands(commands.Cog, name="Social"):
         
         return await ctx.reply(embed=embed, view=UiView(user=user, ctx=ctx))
 
-
+    
+    @commands.guild_only()
+    @commands.command(name='roll',
+                      description='Gire o dado e consiga um valor aléatório.',
+                      usage='d.roll <qty>')
+    async def roll(self, ctx: commands.Context, qty: int = 10):
+        return await ctx.send(f"Eu girei o 🎲 e obtive o número: `{random.randint(1, qty)}`")
+    
+    
+    @commands.guild_only()
+    @commands.is_owner()
+    @commands.command(hidden=True, name='status')
+    async def status(self, ctx: commands.Context):
+        
+        cogs = len(self.bot.cogs)
+        commands = len(self.bot.commands)
+        
+        desc = f"- Feito em Python. {self.emotes.python}\n- `{cogs}` extensões foram carregadas.\n- `{commands}` comandos disponíveis.\n- Meu ping atual é de `{round(self.bot.latency*100)}` ms."
+        
+        em = discord.Embed(title=f'{self.bot.user.name} Stats', description=desc, color=0x800080)
+        em.set_thumbnail(url=self.bot.user.avatar.url)
+        
+        return await ctx.reply(embed=em, ephemeral=True)
+    
+        
+    
+    
+    
+    
 async def setup(bot: commands.Bot):
     await bot.add_cog(SocialCommands(bot))

@@ -1,0 +1,16 @@
+{
+    "unicode_emojis": {
+        "smiley": "☺️",
+        "sunglasses": "😎",
+        "nhe": "😒",
+        "you": " 🫵",
+        "thumbsup": "👍"
+    },
+
+    "emojis_custom": {
+        "owner_logo": "<:owner:1154578446693978162>",
+        "python": "<:python:1154578079642030152>",
+        "audit_log": "<:audito_log:1154578185585963049>",
+        "info": "<:info:1154586857200427098>"
+    }
+}

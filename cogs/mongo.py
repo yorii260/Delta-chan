@@ -15,7 +15,8 @@ class Mongo(commands.Cog):
         self.warns = self.db.get_collection('GUILD_WARNS')
         self.bans = self.db.get_collection("GUILD_BANS")
         self.users = self.db.get_collection("GUILD_USERS")
-    
+        self.guild = self.db.get_collection("GUILD_CONFIG")
+        
     
     @commands.Cog.listener()
     async def on_message(self, message: discord.Message):
@@ -51,7 +52,7 @@ class Mongo(commands.Cog):
         return check 
 
     
-    def insert_warn(self, user: discord.Member, moderator: discord.Member, reason: str):
+    async def insert_warn(self, user: discord.Member, moderator: discord.Member, reason: str):
         
         r = self.warns.insert_one(({
             "id_": user.id,
@@ -60,6 +61,7 @@ class Mongo(commands.Cog):
             "moderator_id": moderator.id,
             "motivo": reason
         }))
+        await self.bot.dispatch("warn_submit", user, moderator, reason)
         
         return r.inserted_id 
 
@@ -69,7 +71,7 @@ class Mongo(commands.Cog):
         user_ = [x for x in self.warns.find() if x['id_'] == user.id]
         
         msg = ''
-        if user_ is not None:
+        if len(user_) != 0:
             
             for i in user_:
                 
@@ -90,7 +92,32 @@ class Mongo(commands.Cog):
             return(msg)
         else:
             return None
+    
+    
+    def audit_channel(self):
+        
+        data = [x for x in self.guild.find()]
+        
+        if len(data) > 0:
+            
+            return int(data[0]['audit_log_channel_id'])
+        
+        else:
+            return None
+    
 
+    
+    def update_audit_channel(self, channel: discord.TextChannel):
+        data = self.guild.find()
+        
+        data.collection.update_one({}, {"$set": {"audit_log_channel_id": channel.id}})
+        
+        return data
+
+    
+    def delete_warn(self, warn_id: str):
+        warn = self.warns.find_one_and_delete({"warn_id": warn_id})
+        return warn    
 
 async def setup(bot: commands.Bot):
     await bot.add_cog(Mongo(bot))

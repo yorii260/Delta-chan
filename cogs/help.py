@@ -1,6 +1,6 @@
 from discord.ext import commands 
 import discord 
-import typing
+from helpers import utils
 
 
 class HelpCog(commands.Cog):
@@ -8,6 +8,7 @@ class HelpCog(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot 
         self.hidden_cogs = ['CommandsErrors', 'HelpCog', 'Mongo']
+        self.emotes = utils.Emotes()
     
     @commands.command(
         name='help',
@@ -39,12 +40,32 @@ class HelpCog(commands.Cog):
         if command is None:
             return await ctx.send(f"`{command_name}` não é um comando válido.")
 
+        aliases = ''
         
-        embed = discord.Embed(title=command.name, description=f"**Description**: `{command.description or '`Não foi inserido`'}`\n**Usage**: `{command.usage or 'Não foi inserido.'}`",
+        if len(command.aliases) > 0:
+            
+            for i in command.aliases:
+                aliases += f"`{i}` "
+        else:
+            aliases = f'Não tem. {self.emotes.nhe}'
+            
+            
+        embed = discord.Embed(title=command.name,
                               color=0x800080)
        
         embed.set_thumbnail(url=ctx.author.avatar.url)
-        
+        embed.add_field(
+            name=f"{self.emotes.audit} Descrição do comando",
+            value=f"`{command.description or f'Não foi inserido. {self.emotes.nhe}'}`"
+        )
+        embed.add_field(
+            name=f"{self.emotes.info} Como usar",
+            value=f"`{command.usage or f'Não inserido. {self.emotes.nhe}'}`"
+        )
+        embed.add_field(
+            name="Aliases do comando",
+            value=aliases
+        )
         return await ctx.reply(embed=embed)
     
 async def setup(bot: commands.Bot):

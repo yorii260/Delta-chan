@@ -48,7 +48,7 @@ class Moderation(commands.Cog):
         em.set_thumbnail(url=user.avatar.url)
         
         await ctx.reply(embed=em)
-        return self.bot.mongo.insert_warn(user, ctx.author, reason)
+        return await self.bot.mongo.insert_warn(user, ctx.author, reason)
     
     
     @commands.has_permissions(kick_members=True)
@@ -67,6 +67,57 @@ class Moderation(commands.Cog):
         em.set_thumbnail(url=user.avatar.url)
         return await ctx.send(embed=em)
         
+    
+    @commands.Cog.listener()
+    async def on_warn_submit(self, warned_user: discord.Member, moderator_user: discord.Member, reason: str):
+        
+        channel = self.bot.mongo.audit_channel()
+
+        if channel is None:
+            return 
+        
+        channel = self.bot.get_channel(int(channel))
+        
+        em = discord.Embed(title=f"{warned_user.name} recebu um aviso.", description=f"**Moderador**: {moderator_user.mention}\n**Motivo**: `{reason}`",
+                           color=0x800080)
+        em.set_thumbnail(url=warned_user.avatar.url)
+        
+        return await channel.send(embed=em)
+    
+        
+    @commands.has_guild_permissions(administrator=True)
+    @commands.command(name='set_audit_channel',
+                      description="Adicione um canal para os logs do bot.",
+                      usage="d.sac <channel>",
+                      aliases=("sac",))
+    async def set_audit(self, ctx: commands.Context, channel: discord.TextChannel):
+        current = self.bot.mongo.audit_channel()
+        
+        if channel.id == current:
+            return await ctx.reply(f"{channel.mention} já é o atual canal de log, tente com outro")
+        
+        r = self.bot.mongo.update_audit_channel(channel)
+        
+        if r is not None:
+            return await ctx.reply(f"{channel.mention} foi setado como canal de logs.")
+        else:
+            print("Alguma coisa de errado ocorreu.")
+            
+    
+    
+    @commands.has_guild_permissions(administrator=True)
+    @commands.guild_only()
+    @commands.command(name='delete_warn',
+                      description="Remova um warn de algum membro pelo seu id.",
+                      usage='d.rw <warn id>',
+                      aliases=("rw",))
+    async def remove_warn(self, ctx: commands.Context, warn_id: str):
+        
+        r = self.bot.mongo.delete_warn(warn_id)
+        
+        if r is not None:
+            return await ctx.reply(f"O warn `{warn_id}` foi removido com sucesso.")
+    
     
 async def setup(bot: commands.Bot):
     await bot.add_cog(Moderation(bot))

@@ -3,7 +3,6 @@ from discord.ext import commands
 from discord import Intents 
 import config
 
-
 cogs = ['social', 'help',
         'moderation', 'commandsError',
         'mongo']
@@ -55,6 +54,7 @@ class Delta(commands.Bot):
     def mongo(self):
         return self.get_cog("Mongo")
     
+
     
     
 if __name__ == '__main__':
