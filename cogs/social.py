@@ -93,12 +93,17 @@ class SocialCommands(commands.Cog, name="Social"):
             await ctx.reply(f"Eu irei te lembrar em <t:{int(datetime.now().timestamp())}:f>")
             
             increment = datetime.now() + timedelta(seconds=20) 
-            self.bot.mongo.update_user(ctx.author, {"$inc": {"reminders_count": 1}})
-            return self.bot.mongo.update_user(ctx.author, {"$push": {"reminders": {"user_id": ctx.author.id,
-                                            "channel_id": ctx.channel.id,
-                                            "remind": "tetse",
-                                            "in": increment,
-                                            "last_check": False}}})
+            return self.bot.mongo.reminders.insert_one(
+                {"reminder": 
+                    {
+                        "user_id": ctx.author.id,
+                        "channel_id": ctx.channel.id,
+                        "remind": "tetse",
+                        "in": increment,
+                        "last_check": False
+                    }
+                }
+                )
         else:
             return await ctx.send("Você não está registrado no bot.")
     

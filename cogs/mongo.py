@@ -13,6 +13,7 @@ class Mongo(commands.Cog):
         self.db = self.client.get_database('Delta')
         
         
+        
     @property
     def users(self):
         return self.db.get_collection("GUILD_USERS")
@@ -33,6 +34,11 @@ class Mongo(commands.Cog):
         return self.db.get_collection("GUILD_CONFIG")
     
     
+    @property
+    def reminders(self):
+        return self.db.get_collection("REMINDERS")
+    
+
     @commands.Cog.listener()
     async def on_message(self, message: discord.Message):
         
@@ -50,13 +56,9 @@ class Mongo(commands.Cog):
                 return self.users.insert_one({
                     "id_": user.id, 
                     "nickname": user.name, 
-                    "avatar_url": user.avatar.url,
-                    "reminders": [],
-                    "afk": False,
-                    "reminders_count": 0
+                    "avatar_url": user.avatar.url
                 })
                 
-            
             else:
                 return
     

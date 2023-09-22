@@ -36,7 +36,8 @@ class Delta(commands.Bot):
             for cog in cogs:
                 await self.load_extension(f'cogs.{cog}')
                 print(f"Sucessfully loaded cogs.{cog} extension.")
-                
+            
+            self.get_cog('Reminder').update_reminders.start()
             print("="*30)
         
     
