@@ -15,25 +15,28 @@ class Reminder(commands.Cog):
     @tasks.loop(seconds=5)
     async def update_reminders(self):
         
-        all_reminds = [x for x in self.bot.mongo.reminders.find()]
-        
-        current_time = datetime.now() 
-        
-        for reminder in all_reminds:
+        try:
+            all_reminds = [x for x in self.bot.mongo.reminders.find()]
             
-            user, channel, remind, date, last_check = reminder['reminder'].values()
-            id_ = reminder['_id']
-            date = datetime.fromisoformat(str(date))
-           
-            if date < current_time or date == current_time:
+            current_time = datetime.now() 
+            
+            for reminder in all_reminds:
                 
-                return self.bot.dispatch('reminder_timeout', user, channel, remind, id_)
-            else:
-                self.bot.mongo.reminders.replace_one({"_id": id_}, {"_id": id_, "reminder": {"user_id": user,
-                                                                                                           "channel_id": channel,
-                                                                                                           "remind": remind,
-                                                                                                           "in": date,
-                                                                                                           "last_check": current_time}})
+                user, channel, remind, date, last_check = reminder['reminder'].values()
+                id_ = reminder['_id']
+                date = datetime.fromisoformat(str(date))
+            
+                if date < current_time or date == current_time:
+                    
+                    self.bot.dispatch('reminder_timeout', user, channel, remind, id_)
+                else:
+                    self.bot.mongo.reminders.replace_one({"_id": id_}, {"_id": id_, "reminder": {"user_id": user,
+                                                                                                            "channel_id": channel,
+                                                                                                            "remind": remind,
+                                                                                                            "in": date,
+                                                                                                            "last_check": current_time}})
+        except Exception as e:
+            self.bot.log.warning(e)
     
     
     @update_reminders.before_loop
@@ -51,6 +54,7 @@ class Reminder(commands.Cog):
         
         await channel.send(embed=embed, content=user.mention)
         
+        self.bot.log.info("Reminder disptach has been received and sended to user %s", user.name)
         return self.bot.mongo.reminders.delete_one({"_id": id_})
         
         

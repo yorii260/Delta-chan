@@ -11,6 +11,8 @@ class CommandsErrors(commands.Cog):
     @commands.Cog.listener()
     async def on_command_error(self, ctx: commands.Context, error):
         
+        self.bot.log.warning("Ignoring except on command %s for user %s\n%s", ctx.command.name, ctx.author.name, error)
+        
         if isinstance(error, commands.MissingRequiredArgument):
             return await ctx.send(f"O parâmetro `{error.param.name}` é obrigatório e o mesmo não foi inserido.")
         
@@ -38,8 +40,12 @@ class CommandsErrors(commands.Cog):
             
             return await ctx.reply(f'Eu preciso {f"das __seguintes__ permissões para usar este comando: {perm}" if len(error.missing_permissions) > 1 else f"da permissão {perm} para usar este comando."}')
         
-        elif isinstance(error, commands.BadArgument):
-            return await ctx.send(error)  
+        elif isinstance(error, commands.UserNotFound):
+            return await ctx.send(f"O usuário `{error.argument}` não foi encontrado.")
+
+        elif isinstance(error, commands.MemberNotFound):
+            return await ctx.send(f"O membro `{error.argument}` não foi encontrado.")
+          
 
 async def setup(bot: commands.Bot):
     await bot.add_cog(CommandsErrors(bot))

@@ -1,7 +1,7 @@
 from discord.ext import commands 
 import discord
 from src.views.moderation_views import BanView, ConfirmEditWarn
-
+import typing
 
 class Moderation(commands.Cog):
     
@@ -142,6 +142,40 @@ class Moderation(commands.Cog):
         
         return self.bot.mongo.warns.update_one({"warn_id": warn_id}, {"$set": {"motivo": new_reason}})
 
-
+    
+    @commands.bot_has_guild_permissions(ban_members=True)
+    @commands.has_permissions(ban_members=True)
+    @commands.command(
+        name='massban',
+        description='Bane vários usuários utilizando o id.',
+        usage='d.massban user1, user2',
+        aliases=('mb',)
+    )
+    async def massban(self, ctx: commands.Context, *args: int | str | discord.User):
+        
+        users = []
+        reason = ''
+        
+        for i in args:
+            
+            if type(i) in (int, discord.User):
+                users.append(i if type(i) == int else i.id) 
+            
+            else:
+                reason += f'{i} '
+        
+        
+        for user in users:
+            
+            try:
+                user = self.bot.get_user(user)
+                
+                await ctx.guild.ban(user, reason=reason)
+            except Exception as e:
+                self.bot.log.warning(e)
+        
+        return await ctx.reply(f"Um total de `{len(users)}` usuários foram banidos com sucesso.")
+    
+    
 async def setup(bot: commands.Bot):
     await bot.add_cog(Moderation(bot))

@@ -66,14 +66,14 @@ class Mongo(commands.Cog):
     
     async def insert_warn(self, user: discord.Member, moderator: discord.Member, reason: str):
         
-        r = self.warns.insert_one(({
+        self.warns.insert_one(({
             "id_": user.id,
             "warn_id": utils.random_id(),
             "date": utils.now_time(),
             "moderator_id": moderator.id,
             "motivo": reason
         }))
-        await self.bot.dispatch("warn_submit", user, moderator, reason)
+        self.bot.dispatch("warn_submit", user, moderator, reason)
         
         return True
 
@@ -128,8 +128,7 @@ class Mongo(commands.Cog):
 
     
     def delete_warn(self, warn_id: str):
-        warn = self.warns.find_one_and_delete({"warn_id": warn_id})
-        return warn  
+        return self.warns.find_one_and_delete({"warn_id": warn_id})
       
 
 async def setup(bot: commands.Bot):

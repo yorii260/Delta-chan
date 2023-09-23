@@ -5,3 +5,4 @@
 __pycache__
 cogs/__pycache__
 src/views/__pycache__
+*.vscode

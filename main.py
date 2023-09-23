@@ -2,7 +2,8 @@ import discord
 from discord.ext import commands 
 from discord import Intents 
 import config
-from discord.ext.commands import when_mentioned_or
+import logging, sys 
+from colorama import Fore, Style
 
 
 cogs = ['social', 'help',
@@ -28,7 +29,8 @@ class Delta(commands.Bot):
             intents=Intents.all()
         )
         
-        self.run(config.token)
+        self.setup_logging()
+        self.run(config.token, root_logger=self.log, log_handler=None)
     
     
     async def setup_hook(self) -> None:
@@ -37,7 +39,7 @@ class Delta(commands.Bot):
             
             for cog in cogs:
                 await self.load_extension(f'cogs.{cog}')
-                print(f"Sucessfully loaded cogs.{cog} extension.")
+                self.log.info(f"Sucessfully loaded cogs.{cog} extension.")
             
             self.get_cog('Reminder').update_reminders.start()
             print("="*30)
@@ -45,7 +47,7 @@ class Delta(commands.Bot):
     
     
     async def on_ready(self) -> None:
-        print(f"Online on user {self.user.name}\n{round(self.latency*100)} ms.")
+        self.log.info(f"Online on user {self.user.name}\n{round(self.latency*100)} ms.")
         await self.delta_activity()
     
     async def delta_activity(self):
@@ -57,6 +59,17 @@ class Delta(commands.Bot):
     def mongo(self):
         return self.get_cog("Mongo")
     
+    
+    def setup_logging(self):
+        logging.basicConfig(
+            handlers=[
+                logging.StreamHandler(sys.stdout)
+            ],
+            format=f"{Fore.MAGENTA}%(asctime)s {Fore.RED}[%(levelname)s]{Fore.RESET} - {Fore.YELLOW}%(message)s{Fore.RESET}",
+            datefmt="%d/%m/%Y %H:%M:%S",
+            level=logging.INFO
+        )
+        self.log = logging.getLogger(__name__)
 
     
     
