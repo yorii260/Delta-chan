@@ -12,32 +12,28 @@ class Reminder(commands.Cog):
         self.bot = bot 
     
     
-    @tasks.loop(seconds=10)
+    @tasks.loop(seconds=5)
     async def update_reminders(self):
         
-        all_reminds = [x for x in self.bot.mongo.reminders.find() if len(x) > 0]
+        all_reminds = [x for x in self.bot.mongo.reminders.find()]
         
         current_time = datetime.now() 
         
-        for i in range(len(all_reminds)):
+        for reminder in all_reminds:
             
-            reminders = [x for x in all_reminds[i].values()]
-            
-            user, channel, remind, date, last_check = reminders[1].values()
-            id_ = reminders[0]
+            user, channel, remind, date, last_check = reminder['reminder'].values()
+            id_ = reminder['_id']
             date = datetime.fromisoformat(str(date))
-            
            
-            if current_time >= date:
+            if date < current_time or date == current_time:
                 
-                await asyncio.sleep(1.5)
                 return self.bot.dispatch('reminder_timeout', user, channel, remind, id_)
             else:
-                return self.bot.mongo.reminders.replace_one({"_id": id_}, {"_id": id_, "reminder": {"user_id": user,
+                self.bot.mongo.reminders.replace_one({"_id": id_}, {"_id": id_, "reminder": {"user_id": user,
                                                                                                            "channel_id": channel,
                                                                                                            "remind": remind,
                                                                                                            "in": date,
-                                                                                                           "last_check": current_time}}) 
+                                                                                                           "last_check": current_time}})
     
     
     @update_reminders.before_loop

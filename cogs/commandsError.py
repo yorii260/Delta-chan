@@ -37,7 +37,9 @@ class CommandsErrors(commands.Cog):
                 perm += f"`{role.replace('_','').capitalize()}`"
             
             return await ctx.reply(f'Eu preciso {f"das __seguintes__ permissões para usar este comando: {perm}" if len(error.missing_permissions) > 1 else f"da permissão {perm} para usar este comando."}')
-            
+        
+        elif isinstance(error, commands.BadArgument):
+            return await ctx.send(error)  
 
 async def setup(bot: commands.Bot):
     await bot.add_cog(CommandsErrors(bot))

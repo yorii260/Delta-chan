@@ -2,6 +2,8 @@ import discord
 from discord.ext import commands 
 from discord import Intents 
 import config
+from discord.ext.commands import when_mentioned_or
+
 
 cogs = ['social', 'help',
         'moderation', 'commandsError',
@@ -20,7 +22,7 @@ class Delta(commands.Bot):
         super().__init__(
             *args,
             **kwargs,
-            command_prefix='d.',
+            command_prefix="d.",
             help_command=None, 
             strip_after_prefix=True,
             intents=Intents.all()

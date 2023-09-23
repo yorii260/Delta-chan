@@ -141,7 +141,7 @@ class Moderation(commands.Cog):
         await ctx.send(embed=embed, view=ConfirmEditWarn(ctx))
         
         return self.bot.mongo.warns.update_one({"warn_id": warn_id}, {"$set": {"motivo": new_reason}})
-    
-    
+
+
 async def setup(bot: commands.Bot):
     await bot.add_cog(Moderation(bot))

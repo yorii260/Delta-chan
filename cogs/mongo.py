@@ -11,8 +11,7 @@ class Mongo(commands.Cog):
         self.bot = bot 
         self.client = pymongo.MongoClient(os.getenv('MONGO_URL'))
         self.db = self.client.get_database('Delta')
-        
-        
+           
         
     @property
     def users(self):
@@ -48,37 +47,22 @@ class Mongo(commands.Cog):
             return
         else:
             
-            user = self.bot.get_user(message.author.id)
-            
-            check = self.users.find_one({"id_": user.id})
-            
-            if check is None:
-                return self.users.insert_one({
-                    "id_": user.id, 
-                    "nickname": user.name, 
-                    "avatar_url": user.avatar.url
-                })
+            if (message.content.strip()[:1] == self.bot.command_prefix):
                 
-            else:
-                return
-    
-    
-    def find_user(self, user: discord.Member):
-        
-        check = self.users.find_one({
-            "id_": user.id
-        })
-        
-        return check 
-
-    
-    def update_user(self, user: discord.Member | int, update):
-        
-        if type(user) == int:
-            return self.users.find_one_and_update({"id_": user}, update)
-        else:
-            return self.users.find_one_and_update({"id_": user.id}, update)
-    
+                user = self.bot.get_user(message.author.id)
+                
+                check = self.users.find_one({"id_": user.id})
+                
+                if check is None:
+                    return self.users.insert_one({
+                        "id_": user.id, 
+                        "nickname": user.name, 
+                        "avatar_url": user.avatar.url
+                    })
+                    
+                else:
+                    return
+            
     
     async def insert_warn(self, user: discord.Member, moderator: discord.Member, reason: str):
         
@@ -91,7 +75,7 @@ class Mongo(commands.Cog):
         }))
         await self.bot.dispatch("warn_submit", user, moderator, reason)
         
-        return r.inserted_id 
+        return True
 
     
     def list_warns(self, user: discord.Member):
@@ -145,7 +129,8 @@ class Mongo(commands.Cog):
     
     def delete_warn(self, warn_id: str):
         warn = self.warns.find_one_and_delete({"warn_id": warn_id})
-        return warn    
+        return warn  
+      
 
 async def setup(bot: commands.Bot):
     await bot.add_cog(Mongo(bot))

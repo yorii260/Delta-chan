@@ -4,7 +4,7 @@ from helpers import utils
 from src.views.SocialViews import UiView
 import random
 from datetime import datetime, timedelta
-
+import re
 
 class SocialCommands(commands.Cog, name="Social"):
     
@@ -49,7 +49,7 @@ class SocialCommands(commands.Cog, name="Social"):
                         inline=True)
 
         embed.add_field(name="Entrou há",
-                        value=f"<t:{int(user.joined_at.timestamp())}:f>"
+                        value=f"<t:{int(user.joined_at.timestamp())}:R>"
                     )
         
         
@@ -84,10 +84,25 @@ class SocialCommands(commands.Cog, name="Social"):
     @commands.command(name='remind',
                       description='Adicione um lembrete e eu irei te lembrar!',
                       aliases=("rm",))
-    async def remind(self, ctx: commands.Context, time: int, *, reminder: str):
+    async def remind(self, ctx: commands.Context, time: str, *, reminder: str):
         
-        increment = datetime.now() + timedelta(minutes=time)
-        embed = discord.Embed(title="Lembrete registrado!", description=f"Pode ficar tranquilo(a) que eu irei te avisar!\nTe vejo em <t:{int(increment.now().timestamp())}:f>",
+        x = [x for x in re.sub(r"[0-9]", '.', time).strip().split('.') if x != '']
+        y = [x for x in re.sub("[a-zA-Z]", '.', time).strip().split('.') if x != '']
+        
+        inc = 0 
+        
+        for r in x:
+            
+            if r == 'min':
+                inc += int(y[x.index(r)])*60
+            elif r == 's':
+                inc += int(y[x.index(r)])
+            elif r == 'h':
+                inc += int(y[x.index(r)])*3600
+            
+        
+        increment = datetime.now() + timedelta(seconds=inc)
+        embed = discord.Embed(title="Lembrete registrado!", description=f"Pode ficar tranquilo(a) que eu irei te avisar!\nTe vejo em <t:{int(increment.timestamp())}:R>",
                               color=0x800080)
         embed.set_thumbnail(url=ctx.author.avatar.url)
         
@@ -104,7 +119,7 @@ class SocialCommands(commands.Cog, name="Social"):
                     "last_check": datetime.now()
                 }
             }
-            )
+        )
     
                 
         
