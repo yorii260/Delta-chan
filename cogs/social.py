@@ -5,6 +5,7 @@ from src.views.SocialViews import UiView
 import random
 from datetime import datetime, timedelta
 import re
+from dateutil import tz 
 
 class SocialCommands(commands.Cog, name="Social"):
     
@@ -16,7 +17,6 @@ class SocialCommands(commands.Cog, name="Social"):
     def __init__(self, bot: commands.Bot):
         self.bot = bot 
         self.emotes = utils.Emotes()
-        
     
     
     #@commands.cooldown(1, 10, type=commands.BucketType.user)
@@ -83,7 +83,8 @@ class SocialCommands(commands.Cog, name="Social"):
     @commands.guild_only()
     @commands.command(name='remind',
                       description='Adicione um lembrete e eu irei te lembrar!',
-                      aliases=("rm",))
+                      aliases=("rm",),
+                      usage='d.remind <time> <remind>')
     async def remind(self, ctx: commands.Context, time: str, *, reminder: str):
         
         x = [x for x in re.sub(r"[0-9]", '.', time).strip().split('.') if x != '']
@@ -93,11 +94,11 @@ class SocialCommands(commands.Cog, name="Social"):
         
         for r in x:
             
-            if r == 'min':
+            if r in ['min', 'm', 'minutes', 'minutos']:
                 inc += int(y[x.index(r)])*60
-            elif r == 's':
+            elif r in ['s', 'seconds', 'segundos']:
                 inc += int(y[x.index(r)])
-            elif r == 'h':
+            elif r in ['h', 'hours', 'horas']:
                 inc += int(y[x.index(r)])*3600
             
         
@@ -121,7 +122,55 @@ class SocialCommands(commands.Cog, name="Social"):
             }
         )
     
+    
+    @commands.command(name='invite',
+                      description='Me adicione em outro servidor <3.')
+    async def invite(self, ctx: commands.Context):
+        
+        embed = discord.Embed(title="Me adicione em outro servidor!",
+                              description=f"Clique [aqui](https://discord.com/api/oauth2/authorize?client_id=1178489335826354206&permissions=8&scope=bot) para me adicionar à outro servidor.")
+        embed.color = 0x800080
+        embed.set_thumbnail(url=self.bot.user.avatar.url)
+        await ctx.send(embed=embed)
+    
+    
+    @commands.command(name='afk',
+                      description='Se ausente e sempre deixe uma mensagem para quem lhe marcar.',
+                      usage="d.afk <motivo>")
+    async def afk(self, ctx: commands.Context, *, args: str):
+        
+        insert = {
+            "user_id": ctx.author.id,
+            "guild_id": ctx.guild.id,
+            "reason": args, 
+            "afk_date": [f"<t:{utils.now_time()}:R>", datetime.now(tz=tz.gettz('America/Sao_Paulo')).strftime("%d/%m/%y às %H:%M")]
+        }
+        
+        self.bot.mongo.afk.insert_one(insert)
+        return await ctx.send(f"{ctx.author.mention}, AFK ativado. Para remover-lo, basta enviar uma mensagem em qualquer chat que eu tenha permissão de ver.")
+    
+    
+    @commands.Cog.listener()
+    async def on_message(self, message: discord.Message):
+    
+        g = [f for f in self.bot.mongo.afk.find()]
+        
+        for x in range(0, len(g)):
+            
+            id_, user, guild, reason, afk_date = g[x].values()
+            
+            if message.guild.id == guild and not message.author.bot:
                 
+                if message.author.id == user and not message.content.startswith(self.bot.command_prefix):
+                    self.bot.mongo.afk.delete_one({"_id": id_})
+                    return await message.reply(f"<@{user}>, o seu AFK foi removido.")
+                
+                elif message.author.id != user and user in [f.id for f in message.mentions]:
+                    return await message.reply(f"<@{user}> está AFK com o motivo: `{reason.strip()}` {afk_date[0]}.")
+                else:
+                    pass
+                
+        
         
 async def setup(bot: commands.Bot):
     await bot.add_cog(SocialCommands(bot))

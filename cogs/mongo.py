@@ -36,6 +36,11 @@ class Mongo(commands.Cog):
     @property
     def reminders(self):
         return self.db.get_collection("REMINDERS")
+
+    
+    @property
+    def afk(self):
+        return self.db.get_collection('AFK')
     
 
     @commands.Cog.listener()
