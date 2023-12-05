@@ -8,7 +8,8 @@ from colorama import Fore, Style
 
 cogs = ['social', 'help',
         'moderation', 'commandsError',
-        'mongo', 'reminders']
+        'mongo', 'reminders',
+        "automod"]
 
 class Delta(commands.Bot): 
     

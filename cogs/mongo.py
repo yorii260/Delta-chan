@@ -43,6 +43,12 @@ class Mongo(commands.Cog):
         return self.db.get_collection('AFK')
     
 
+    
+    @property
+    def automod(self):
+        return self.db.get_collection('AUTOMOD_CONFIG')
+    
+    
     @commands.Cog.listener()
     async def on_message(self, message: discord.Message):
         
@@ -69,11 +75,12 @@ class Mongo(commands.Cog):
                     return
             
     
-    async def insert_warn(self, user: discord.Member, moderator: discord.Member, reason: str):
+    async def insert_warn(self, user: discord.Member, guild_id: int, moderator: discord.Member, reason: str):
         
         self.warns.insert_one(({
             "id_": user.id,
             "warn_id": utils.random_id(),
+            "guild_id": guild_id,
             "date": utils.now_time(),
             "moderator_id": moderator.id,
             "motivo": reason

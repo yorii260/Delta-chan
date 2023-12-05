@@ -1,6 +1,6 @@
 import discord 
 from discord.ext import commands 
-
+from cogs.automod import AutomodException
 
 class CommandsErrors(commands.Cog):
     
@@ -45,7 +45,9 @@ class CommandsErrors(commands.Cog):
 
         elif isinstance(error, commands.MemberNotFound):
             return await ctx.send(f"O membro `{error.argument}` não foi encontrado.")
-          
+
+        elif isinstance(error, commands.CheckFailure):
+            return await ctx.send(error.message)
 
 async def setup(bot: commands.Bot):
     await bot.add_cog(CommandsErrors(bot))

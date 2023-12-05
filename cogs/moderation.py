@@ -48,7 +48,7 @@ class Moderation(commands.Cog):
         em.set_thumbnail(url=user.avatar.url)
         
         await ctx.reply(embed=em)
-        return await self.bot.mongo.insert_warn(user, ctx.author, reason)
+        return await self.bot.mongo.insert_warn(user, ctx.guild.id, ctx.author, reason)
     
     
     @commands.has_permissions(kick_members=True)
@@ -59,7 +59,7 @@ class Moderation(commands.Cog):
         usage="d.list_warns <user>",
         aliases=("lw",)
     )
-    async def list_warns(self, ctx: commands.Context, user: discord.Member):
+    async def list_warns(self, ctx: commands.Context, user: discord.Member | discord.User):
         
         user_ = self.bot.mongo.list_warns(user)
         
