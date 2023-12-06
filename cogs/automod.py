@@ -65,47 +65,55 @@ class AutomodDatabase:
     
     def update_moderator_roles(self, roles: discord.Role | list[discord.Role]):
         
-        ammr = self.dict[0]['automod_config']['automod_moderator_roles']
+        ammr = self.dict[0]['automod_config']
         
         if type(roles) == list and len(roles) > 1:
             
             for role in roles:
                 
-                if role.id in ammr:
-                    raise AutomodException(f"O role {role.id} has already in the database, skipped.")
+                if role.id in ammr['automod_moderator_roles']:
+                    raise AutomodException(f"O role `{role.id}` has already in the database, skipped.")
 
-                ammr.append(role.id)
+                ammr['automod_moderator_roles'].append(role.id)
                 
-            return self.data.update_one({"_id": self._id}, {"$set": {"automod_config":{"automod_moderator_roles": ammr}}})
+            return self.data.update_one({"_id": self._id}, {"$set": {"automod_config":ammr}})
         else:
             
-            if roles.id in ammr:
-                raise AutomodException(f"O role {roles.id} has already in the database, skipped.")
-            ammr.append(roles.id)
-            return self.data.update_one({"_id": self._id}, {"$set": {"automod_config":{"automod_moderator_roles": ammr}}}, upsert=True)
+            if roles.id in ammr['automod_moderator_roles']:
+                raise AutomodException(f"O role `{roles.id}` has already in the database, skipped.")
+            ammr['automod_moderator_roles'].append(roles.id)
+            return self.data.update_one({"_id": self._id}, {"$set": {"automod_config":ammr}}, upsert=True)
     
     
     def update_ignored_roles(self, roles: discord.Role | list[discord.Role]):
         
-        ammr = self.dict[0]['automod_config']['automod_ignored_roles']
+        ammr = self.dict[0]['automod_config']
         
         if type(roles) == list and len(roles) > 1:
             
             for role in roles:
                 
-                if role.id in ammr:
+                if role.id in ammr['automod_ignored_roles']:
                     raise AutomodException(f"O role {role.id} has already in the database, skipped.")
 
-                ammr.append(role.id)
+                ammr['automod_ignored_roles'].append(role.id)
                 
-            return self.data.update_one({"_id": self._id}, {"$set": {"automod_config":{"automod_ignored_roles": ammr}}})
+            return self.data.update_one({"_id": self._id}, {"$set": {"automod_config":ammr}})
         else:
             
-            if roles.id in ammr:
+            if roles.id in ammr['automod_ignored_roles']:
                 raise AutomodException(f"O role {roles.id} has already in the database, skipped.")
-            ammr.append(roles.id)
-            return self.data.update_one({"_id": self._id}, {"$set": {"automod_config":{"automod_ignored_roles": ammr}}}, upsert=True)
+            ammr['automod_ignored_roles'].append(roles.id)
+            return self.data.update_one({"_id": self._id}, {"$set": {"automod_config":ammr}}, upsert=True)
     
+    
+    def update_auto_delete(self, update):
+        
+        d: dict = self.dict[0]['automod_config']
+        d['auto_delete_config'].update(update)
+        
+        return self.data.update_one({"_id": self._id}, {"$set":{"automod_config":d}})
+
 class AutomodCog(commands.Cog, name="Automod"):
     
     def __init__(self, bot: commands.Bot):
@@ -126,6 +134,19 @@ class AutomodCog(commands.Cog, name="Automod"):
     async def _(self, ctx: commands.Context, *, role: discord.Role):
         self.automod_.update_moderator_roles(role)
         return await ctx.send(f"`{role.name}` foi adicionado com sucesso.")
+    
+    
+    @automod.command(name='add_ad_filter',
+                     aliases=('adf',))
+    async def _(self, ctx: commands.Context, *, filter: str):
+        d = {
+            "auto_delete_id": random.randint(0, 99999),
+            "auto_delete_channel_id": ctx.channel.id,
+            "auto_delete_filter": filter,
+            "auto_delete_punish": "Ban"
+        }
+        self.automod_.update_auto_delete(d)
+        return await ctx.send("Update sucessfull.")
 
 
 async def setup(bot: commands.Bot):
