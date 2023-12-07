@@ -13,7 +13,9 @@ from helpers import utils
 import discord
 import random 
 from pymongo.collection import Collection
-import asyncio 
+import asyncio, re
+from src.views.automod_views import AutomodView
+
 
 automod_config = {
     
@@ -175,18 +177,31 @@ class AutomodCog(commands.Cog, name="Automod"):
                 filter=filter.strip().split(':')
                 
                 if filter[0] == "SW":
-                    filter = bool(message.content.startswith(filter[1].lower()))
+                    filter = message.content.lower().strip().startswith(filter[1].strip().lower())
                 elif filter[0] == "EW":
-                    filter = bool(message.content.endswith(filter[1].lower()))
-            
+                    filter = message.content.strip().lower().endswith(filter[1].strip().lower())
+                
             else:
                 filter = True 
 
             if filter:
-                
+            
                 return await message.delete()
     
-
+    @commands.group(
+        name='automod',
+        description='Comandos relacionados à moderação automática.',
+        usage='d.automod'
+    )
+    async def _(self, ctx: commands.Context):
+        
+        embed = discord.Embed(
+            title='Automod Painel',
+            color=0x800080
+        )
+        
+        embed.set_thumbnail(url=ctx.author.avatar.url)
+        return await ctx.send(embed=embed, view=AutomodView())
 
 async def setup(bot: commands.Bot):
     await bot.add_cog(AutomodCog(bot))
