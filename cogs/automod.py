@@ -57,9 +57,8 @@ class AutomodException(commands.CheckFailure):
         
 class AutomodDatabase:
     
-    def __init__(self, bot: commands.Bot, database: Collection):
+    def __init__(self, database: Collection):
         
-        self.bot = bot
         self.data = database
         self.dict = [f for f in self.data.find()]
         self._id = self.dict[0]['_id']
@@ -152,7 +151,7 @@ class AutomodCog(commands.Cog, name="Automod"):
         self.bot = bot
         self.log = self.bot.log 
         
-        self.automod_ = AutomodDatabase(self.bot, self.bot.mongo.automod)
+        self.automod_ = AutomodDatabase(self.bot.mongo.automod)
     
     
     @commands.Cog.listener('on_message')
@@ -197,11 +196,12 @@ class AutomodCog(commands.Cog, name="Automod"):
         
         embed = discord.Embed(
             title='Automod Painel',
-            color=0x800080
+            color=0x800080,
+            description='Veja as configurações atuais de cada módulo.'
         )
         
         embed.set_thumbnail(url=ctx.author.avatar.url)
-        return await ctx.send(embed=embed, view=AutomodView())
+        return await ctx.send(embed=embed, view=AutomodView(self.bot))
 
 async def setup(bot: commands.Bot):
     await bot.add_cog(AutomodCog(bot))

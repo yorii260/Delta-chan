@@ -159,7 +159,7 @@ class SocialCommands(commands.Cog, name="Social"):
             
             id_, user, guild, reason, afk_date = g[x].values()
             
-            if message.guild.id == guild and not message.author.bot:
+            if message.guild != None and message.guild.id == guild and not message.author.bot:
                 
                 if message.author.id == user and not message.content.startswith(self.bot.command_prefix):
                     self.bot.mongo.afk.delete_one({"_id": id_})
@@ -169,6 +169,7 @@ class SocialCommands(commands.Cog, name="Social"):
                     return await message.reply(f"<@{user}> está AFK com o motivo: `{reason.strip()}` {afk_date[0]}.")
                 else:
                     pass
+
                 
         
         
