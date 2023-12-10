@@ -11,10 +11,11 @@ class CommandsErrors(commands.Cog):
     @commands.Cog.listener()
     async def on_command_error(self, ctx: commands.Context, error):
         
-        self.bot.log.warning("Ignoring except on command %s for user %s\n%s", ctx.command.name, ctx.author.name, error)
-        
         if isinstance(error, commands.MissingRequiredArgument):
             return await ctx.send(f"O parâmetro `{error.param.name}` é obrigatório e o mesmo não foi inserido.")
+        
+        elif isinstance(error, commands.CommandNotFound):
+            return
         
         elif isinstance(error, commands.MissingPermissions):
             
@@ -49,5 +50,7 @@ class CommandsErrors(commands.Cog):
         elif isinstance(error, commands.CheckFailure):
             return await ctx.send(error.message)
 
+        self.bot.log.warning("Ignoring except on command %s for user %s\n%s", ctx.command.name, ctx.author.name, error)
+        
 async def setup(bot: commands.Bot):
     await bot.add_cog(CommandsErrors(bot))

@@ -33,6 +33,7 @@ class Moderation(commands.Cog):
         kick_members=True
     )
     @commands.guild_only()
+    @commands.cooldown(1, 10, commands.BucketType.user)
     @commands.command(
         name='warn',
         description= 'Aplique um aviso a algum membro do servidor.',

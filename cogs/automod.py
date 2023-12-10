@@ -11,10 +11,10 @@ Automod - DeltaChan
 from discord.ext import commands 
 from helpers import utils 
 import discord
-import random 
+from datetime import timedelta, datetime
 from pymongo.collection import Collection
-import asyncio, re
-from src.views.automod_views import AutomodView
+from dateutil import tz
+from src.views.automod_views import AutomodView, AutomodConfigView
 
 
 automod_config = {
@@ -139,10 +139,6 @@ class AutomodDatabase:
         
         return self.data.update_one({"_id": self._id}, {"$set":{"automod_config":d}})
     
-
-    @property
-    def auto_delete_config(self):
-        return [y for f, y in self.dict[0]['automod_config']['auto_delete_config'].items()]
     
 class AutomodCog(commands.Cog, name="Automod"):
     
@@ -157,14 +153,14 @@ class AutomodCog(commands.Cog, name="Automod"):
     @commands.Cog.listener('on_message')
     async def automod_auto_delete(self, message: discord.Message):
         
-        config = self.automod_.auto_delete_config
+        config = self.automod_.dict[0]['automod_config']['auto_delete_config']
         
         # /////////////////////////////////////////////// # 
         
-        ad_id = config[0]
-        filter = config[1]
-        punish = config[2]
-        channel = int(config[3])
+        ad_id = config['auto_delete_id']
+        filter = config['auto_delete_filter']
+        punish = config['auto_delete_punish']
+        channel = int(config['auto_delete_channel_id'])
         
 
         if (
@@ -187,13 +183,33 @@ class AutomodCog(commands.Cog, name="Automod"):
             
                 return await message.delete()
     
+    
+    @commands.Cog.listener()
+    async def on_member_join(self, member: discord.Member):
+        
+        config = self.automod_.kick_new_account
+        minimum_time = config[2]
+        log_channel = self.bot.get_channel(self.bot.mongo.audit_channel)
+        
+        
+        time = datetime.now(tz=tz.UTC) + timedelta(days=int(minimum_time))
+        user_time = member.created_at.astimezone(tz=tz.UTC)
+        
+        if time > user_time or time == user_time:
+            return await member.kick(reason="Filtro de contas fakes ativo!")
+        
+    
     @commands.group(
         name='automod',
         description='Comandos relacionados à moderação automática.',
-        usage='d.automod'
+        usage='d.automod',
+        aliases=("a",)
     )
-    async def _(self, ctx: commands.Context):
+    async def auto(self, ctx: commands.Context):
+        pass 
         
+    @auto.command(name='painel')
+    async def painel(self, ctx: commands.Context):
         embed = discord.Embed(
             title='Automod Painel',
             color=0x800080,
@@ -201,7 +217,20 @@ class AutomodCog(commands.Cog, name="Automod"):
         )
         
         embed.set_thumbnail(url=ctx.author.avatar.url)
-        return await ctx.send(embed=embed, view=AutomodView(self.bot))
+        await ctx.send(embed=embed, view=AutomodView(self.bot))
+
+    
+    @auto.command(
+        name='config',
+        description = "Veja e modifique as configurações de todos os módulos.",
+        usage = 'd.automod config',
+        aliases=("cf",)
+    )
+    async def cf(self, ctx: commands.Context):
+        
+        embed = discord.Embed(title='Automod Config', color=0xff0000)
+        return await ctx.send(embed=embed, view=AutomodConfigView(self.bot))
+    
 
 async def setup(bot: commands.Bot):
     await bot.add_cog(AutomodCog(bot))

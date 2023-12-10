@@ -1,6 +1,8 @@
 import discord
 from discord.ext import commands
 from pymongo.collection import Collection
+from discord import Button, ButtonStyle
+from helpers.utils import random_id
 
 
 class AutoModSelectMenu(discord.ui.Select):
@@ -24,7 +26,6 @@ class AutoModSelectMenu(discord.ui.Select):
         if self.values[0] == 'Auto Delete':
             
             x: dict = [f for f in database.find()][0]['automod_config']['auto_delete_config']
-            
             embed.title = 'Auto Delete'
             
             if x['auto_delete_id'] != '':
@@ -41,7 +42,7 @@ class AutoModSelectMenu(discord.ui.Select):
                 )
                 embed.add_field(
                     name='Filter',
-                    value=x['auto_delete_filter'].split(":")[1].capitalize(),
+                    value=f"{'Starts with ' if x['auto_delete_filter'].split(':')[0] == 'SW' else 'Ends with '}{x['auto_delete_filter'].split(':')[1].capitalize()}",
                     inline=False
                 )
             
@@ -103,3 +104,87 @@ class AutomodView(discord.ui.View):
     def __init__(self, bot, *, timeout=180):
         super().__init__(timeout=timeout)
         self.add_item(AutoModSelectMenu(bot))
+    
+
+class AutomodConfigView(discord.ui.View):
+    
+    def __init__(self, bot: commands.Bot, *, timeout=60):
+        super().__init__(timeout=timeout)
+        
+        self.bot = bot 
+    
+    @discord.ui.button(
+        label='Auto Delete',
+        custom_id='auto_delete_button',
+        style=ButtonStyle.blurple
+    )
+    async def button_auto_del(self, interaction: discord.Interaction, button: Button):
+        return await interaction.response.send_modal(AutoDeleteModal(self.bot))
+    
+    @discord.ui.button(
+        label='Auto Ban',
+        custom_id='auto_ban_button',
+        style=ButtonStyle.blurple
+    )
+    async def button_auto_ban(self, interaction: discord.Interaction, button: Button):
+        pass
+    
+    @discord.ui.button(
+        label='Auto Kick',
+        custom_id='auto_kick_button',
+        style=ButtonStyle.blurple
+    )
+    async def button_auto_kick(self, interaction: discord.Interaction, button: Button):
+        pass
+    
+    @discord.ui.button(
+        label='Auto Purge',
+        custom_id='auto_purge_button',
+        style=ButtonStyle.blurple
+    )
+    async def button_auto_purge(self, interaction: discord.Interaction, button: Button):
+        pass
+    
+
+class AutoDeleteModal(discord.ui.Modal):
+    
+    def __init__(self, bot: commands.Bot):
+        super().__init__(title='Auto Delete', timeout=60, custom_id='auto_delete_modal')
+        
+        self.filter = discord.ui.TextInput(label='Filter', 
+                                           placeholder='Digite a palavra-chave.', 
+                                           min_length=2, 
+                                           max_length=50, 
+                                           style=discord.TextStyle.short,
+                                           custom_id='filter_text')
+
+        self.channel = discord.ui.TextInput(
+            label="ID do canal",
+            custom_id='auto_del_channel',
+            placeholder='Digite ou cole o id do canal.',
+            max_length=19,
+            min_length=19
+        )
+        
+        self.bot = bot
+        self.add_item(self.filter)
+        self.add_item(self.channel)
+        
+    async def on_submit(self, interaction: discord.Interaction):
+        
+        update = {
+            "auto_delete_channel_id": int(self.channel.value),
+            "auto_delete_filter": f"SW:{self.filter.value}",
+            "auto_delete_punish": "",
+            "auto_delete_id": random_id()
+        }
+        x: dict = [f for f in self.bot.mongo.automod.find()][0]
+        x['automod_config']['auto_delete_config'].update(update)
+        if self.filter.value != '':
+            await interaction.response.send_message(f"{interaction.user.mention}, obrigado!", ephemeral=True)
+            return self.bot.mongo.automod.update_one({"_id": x['_id']}, {"$set":{"automod_config":x['automod_config']}})
+    
+    
+            
+            
+    
