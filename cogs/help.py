@@ -8,7 +8,7 @@ class HelpCog(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot 
         self.hidden_cogs = ['CommandsErrors', 'HelpCog', 'Mongo',
-                            'Reminder']
+                            'Reminder', 'Purge']
         self.emotes = utils.Emotes()
     
     @commands.command(

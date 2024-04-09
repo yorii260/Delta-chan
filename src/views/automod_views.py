@@ -76,7 +76,7 @@ class AutoModSelectMenu(discord.ui.Select):
             )
             embed.add_field(
                 name='Purge delay',
-                value=f"`{z['auto_purge_delay']} seconds`" if z['auto_purge_id'] != '' else "Não definido.",
+                value=f"`{round(z['auto_purge_delay']/60, 1)} minutes`" if z['auto_purge_id'] != '' else "Não definido.",
                 inline=False
             )
         
