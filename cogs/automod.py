@@ -14,7 +14,7 @@ import discord
 from datetime import timedelta, datetime
 from pymongo.collection import Collection
 from dateutil import tz
-from src.views.automod_views import AutomodView, AutomodConfigView
+from src.views.automod_views import AutomodView, AutomodConfigView, AutoPurgeButtons
 from discord.ext import tasks
 
 automod_config = {

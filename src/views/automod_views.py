@@ -43,6 +43,7 @@ class AutoModSelectMenu(discord.ui.Select):
                 value=f"{'Starts with ' if x['auto_delete_filter'].split(':')[0] == 'SW' else 'Ends with '}`{x['auto_delete_filter'].split(':')[1].capitalize()}`",
                 inline=False
             )
+            return await interaction.response.send_message(embed=embed, ephemeral=True)
             
         elif self.values[0] == 'Auto Ban':
             
@@ -58,6 +59,7 @@ class AutoModSelectMenu(discord.ui.Select):
                 name='Filter',
                 value=y['auto_ban_when'] or "Não definido."
             )
+            return await interaction.response.send_message(embed=embed, ephemeral=True)
         
         elif self.values[0] == 'Auto Purge':
             
@@ -79,6 +81,7 @@ class AutoModSelectMenu(discord.ui.Select):
                 value=f"`{round(z['auto_purge_delay']/60, 1)} minutes`" if z['auto_purge_id'] != '' else "Não definido.",
                 inline=False
             )
+            return await interaction.response.send_message(embed=embed, ephemeral=True, view=AutoPurgeButtons(self.bot))
         
         elif self.values[0] == 'Auto Kick':
             
@@ -94,8 +97,9 @@ class AutoModSelectMenu(discord.ui.Select):
                 name='Min time to kick new users',
                 value=xy['kick_minimum_time'] if xy['kick_id'] != '' else 'Não definido.'
             )
+            return await interaction.response.send_message(embed=embed, ephemeral=True)
             
-        return await interaction.response.send_message(embed=embed, ephemeral=True)
+        
 
 
 class AutomodView(discord.ui.View):
@@ -224,4 +228,42 @@ class AutoPurgeModal(discord.ui.Modal):
         if self.purge_channel != "":
             await interaction.response.send_message(f"{interaction.user.mention}, obrigado!", ephemeral=True)
             return self.bot.mongo.automod.update_one({"_id": x['_id']}, {"$set":{"automod_config":x['automod_config']}})
-        
+    
+
+class AutoPurgeButtons(discord.ui.View):
+
+    def __init__(self, bot: commands.Bot, *, timeout=50):
+        super().__init__(timeout=timeout)
+
+        self.bot = bot
+
+    @discord.ui.button(
+        label="Desativar",
+        custom_id="purge_desactive",
+        style=discord.ButtonStyle.red
+    )
+    async def des_button(self, interaction: discord.Interaction, button: discord.Button):
+        x: dict = [f for f in self.bot.mongo.automod.find()][0]
+
+        update = {
+            "auto_purge_id": "",
+            "auto_purge_channel_id": "",
+            "auto_purge_guild_id":  "",
+            "last_check": "",
+            "next_purge": ""
+        }
+
+        x['automod_config']['auto_purge_config'].update(update)
+        self.bot.mongo.automod.update_one({"_id": x['_id']}, {"$set":{"automod_config":x['automod_config']}})
+
+        async def callback(interaction):
+            print(interaction)
+
+            
+        return await interaction.response.send_message("O módulo Auto Purge foi desativado.")
+    
+    
+
+    
+    
+
