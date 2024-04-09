@@ -15,7 +15,7 @@ from datetime import timedelta, datetime
 from pymongo.collection import Collection
 from dateutil import tz
 from src.views.automod_views import AutomodView, AutomodConfigView
-
+from discord.ext import tasks
 
 automod_config = {
     
@@ -198,8 +198,8 @@ class AutomodCog(commands.Cog, name="Automod"):
         
         if time > user_time or time == user_time:
             return await member.kick(reason="Filtro de contas fakes ativo!")
-        
-    
+
+
     @commands.group(
         name='automod',
         description='Comandos relacionados à moderação automática.',

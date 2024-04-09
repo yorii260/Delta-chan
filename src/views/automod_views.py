@@ -76,7 +76,7 @@ class AutoModSelectMenu(discord.ui.Select):
             )
             embed.add_field(
                 name='Purge delay',
-                value=f"{z['auto_purge_delay']} seconds" if z['auto_purge_id'] != '' else "Não definido.",
+                value=f"`{z['auto_purge_delay']} seconds`" if z['auto_purge_id'] != '' else "Não definido.",
                 inline=False
             )
         
@@ -189,7 +189,7 @@ class AutoPurgeModal(discord.ui.Modal):
         super().__init__(title="Auto Purge", timeout=60, custom_id="auto_purge_modal")
 
         self.purge_delay = discord.ui.TextInput(label="Delay do purge",
-                                                placeholder="Digite o tempo em minutos.",
+                                                placeholder="Digite o tempo em segundos.",
                                                 min_length=1,
                                                 max_length=4,
                                                 style=discord.TextStyle.short,
@@ -217,7 +217,11 @@ class AutoPurgeModal(discord.ui.Modal):
             "auto_purge_guild_id": self.bot.get_channel(int(self.purge_channel.value)).guild.id
         }
 
-        x: dict = [f for f in self.bot.mongo.automod.find()]
+        x: dict = [f for f in self.bot.mongo.automod.find()][0]
 
-        print(x)
-        print(update)
+        x['automod_config']['auto_purge_config'].update(update)
+
+        if self.purge_channel != "":
+            await interaction.response.send_message(f"{interaction.user.mention}, obrigado!", ephemeral=True)
+            return self.bot.mongo.automod.update_one({"_id": x['_id']}, {"$set":{"automod_config":x['automod_config']}})
+        
