@@ -176,6 +176,7 @@ class AutomodCog(commands.Cog, name="Automod"):
                 elif filter[0] == "EW":
                     filter = message.content.strip().lower().endswith(filter[1].strip().lower())
                 
+                
             else:
                 filter = True 
 
@@ -229,6 +230,7 @@ class AutomodCog(commands.Cog, name="Automod"):
     async def cf(self, ctx: commands.Context):
         
         embed = discord.Embed(title='Automod Config', color=0xff0000)
+        embed.description = "Veja as atuais configurações do atual servidor."
         return await ctx.send(embed=embed, view=AutomodConfigView(self.bot))
     
 

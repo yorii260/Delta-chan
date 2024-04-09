@@ -6,6 +6,8 @@ import random
 from datetime import datetime, timedelta
 import re
 from dateutil import tz 
+from json import load 
+
 
 class SocialCommands(commands.Cog, name="Social"):
     
@@ -36,14 +38,13 @@ class SocialCommands(commands.Cog, name="Social"):
         if user == self.bot.user:
             return
         
-        
         embed = discord.Embed(
             title=user.name, 
             color=0x800080
         )
         
+
         embed.set_thumbnail(url=user.avatar.url)
-        
         embed.add_field(name="ID",
                         value=f"`{user.id}`",
                         inline=True)

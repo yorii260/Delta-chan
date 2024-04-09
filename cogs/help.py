@@ -1,7 +1,7 @@
 from discord.ext import commands 
 import discord 
 from helpers import utils
-
+from json import load
 
 class HelpCog(commands.Cog):
     
@@ -17,6 +17,10 @@ class HelpCog(commands.Cog):
         hidden=True
     )
     async def ajuda(self, ctx: commands.Context, command_name: str = None):
+        
+        with open("src/assets/links.json", "r") as f:
+            r = load(f)
+
         
         if command_name is None:
             
@@ -43,6 +47,7 @@ class HelpCog(commands.Cog):
                 embed.add_field(name=self.bot.get_cog(cog).qualified_name, value=text, inline=True)
             
             embed.set_thumbnail(url=self.bot.user.avatar.url)
+            embed.set_image(url=r['help_image'])
             return await ctx.reply(embed=embed)
 
         command = self.bot.get_command(command_name)
@@ -76,6 +81,7 @@ class HelpCog(commands.Cog):
             name="Aliases do comando",
             value=aliases
         )
+        embed.set_image(url=r['help_image'])
         return await ctx.reply(embed=embed)
     
 async def setup(bot: commands.Bot):

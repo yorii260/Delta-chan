@@ -28,23 +28,21 @@ class AutoModSelectMenu(discord.ui.Select):
             x: dict = [f for f in database.find()][0]['automod_config']['auto_delete_config']
             embed.title = 'Auto Delete'
             
-            if x['auto_delete_id'] != '':
-                
-                embed.add_field(
-                    name='Active',
-                    value='Sim',
-                    inline=False
-                )
-                embed.add_field(
-                    name='Active channel',
-                    value=f"<#{x['auto_delete_channel_id']}>",
-                    inline=False
-                )
-                embed.add_field(
-                    name='Filter',
-                    value=f"{'Starts with ' if x['auto_delete_filter'].split(':')[0] == 'SW' else 'Ends with '}{x['auto_delete_filter'].split(':')[1].capitalize()}",
-                    inline=False
-                )
+            embed.add_field(
+                name='Estado',
+                value="✅" if x['auto_delete_id'] != '' else '❌',
+                inline=False
+            )
+            embed.add_field(
+                name='Active channel',
+                value=f"<#{x['auto_delete_channel_id']}>" if x['auto_delete_id'] != '' else "None",
+                inline=False
+            )
+            embed.add_field(
+                name='Filtro',
+                value=f"{'Starts with ' if x['auto_delete_filter'].split(':')[0] == 'SW' else 'Ends with '}`{x['auto_delete_filter'].split(':')[1].capitalize()}`",
+                inline=False
+            )
             
         elif self.values[0] == 'Auto Ban':
             
@@ -53,7 +51,7 @@ class AutoModSelectMenu(discord.ui.Select):
                 
             embed.add_field(
                 name='Active',
-                value='Sim' if y['auto_ban_id'] != '' else 'Não',
+                value='✅' if y['auto_ban_id'] != '' else '❌',
                 inline=False 
             )
             embed.add_field(
@@ -68,7 +66,7 @@ class AutoModSelectMenu(discord.ui.Select):
             
             embed.add_field(
                 name='Active',
-                value='Sim' if z['auto_purge_id'] != '' else 'Não',
+                value='✅' if z['auto_purge_id'] != '' else '❌',
                 inline=False
             )
             embed.add_field(
@@ -89,7 +87,7 @@ class AutoModSelectMenu(discord.ui.Select):
             
             embed.add_field(
                 name='Active',
-                value='Sim' if xy['kick_id'] != '' else 'Não',
+                value='✅' if xy['kick_id'] != '' else '❌',
                 inline=False 
             )
             embed.add_field(
@@ -143,7 +141,7 @@ class AutomodConfigView(discord.ui.View):
         style=ButtonStyle.blurple
     )
     async def button_auto_purge(self, interaction: discord.Interaction, button: Button):
-        pass
+        return await interaction.response.send_modal(AutoPurgeModal(self.bot))
     
 
 class AutoDeleteModal(discord.ui.Modal):
@@ -162,8 +160,8 @@ class AutoDeleteModal(discord.ui.Modal):
             label="ID do canal",
             custom_id='auto_del_channel',
             placeholder='Digite ou cole o id do canal.',
-            max_length=19,
-            min_length=19
+            max_length=20,
+            min_length=1
         )
         
         self.bot = bot
@@ -185,6 +183,41 @@ class AutoDeleteModal(discord.ui.Modal):
             return self.bot.mongo.automod.update_one({"_id": x['_id']}, {"$set":{"automod_config":x['automod_config']}})
     
     
-            
-            
+class AutoPurgeModal(discord.ui.Modal):
+
+    def __init__(self, bot: commands.Bot):
+        super().__init__(title="Auto Purge", timeout=60, custom_id="auto_purge_modal")
+
+        self.purge_delay = discord.ui.TextInput(label="Delay do purge",
+                                                placeholder="Digite o tempo em minutos.",
+                                                min_length=1,
+                                                max_length=4,
+                                                style=discord.TextStyle.short,
+                                                custom_id="purge_delay_label")
+        
+        self.purge_channel = discord.ui.TextInput(
+            label="ID do canal",
+            custom_id='auto_purge_channel',
+            placeholder='Digite ou cole o id do canal.',
+            max_length=20,
+            min_length=1
+        )
+
+        self.bot = bot 
+        self.add_item(self.purge_channel)
+        self.add_item(self.purge_delay)
+
     
+    async def on_submit(self, interaction: discord.Interaction):
+
+        update = {
+            "auto_purge_channel_id": int(self.purge_channel.value),
+            "auto_purge_delay": int(self.purge_delay.value),
+            "auto_purge_id": random_id(),
+            "auto_purge_guild_id": self.bot.get_channel(int(self.purge_channel.value)).guild.id
+        }
+
+        x: dict = [f for f in self.bot.mongo.automod.find()]
+
+        print(x)
+        print(update)

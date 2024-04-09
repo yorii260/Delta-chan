@@ -51,6 +51,7 @@ class Delta(commands.Bot):
         self.log.info(f"Online on user {self.user.name}\n{round(self.latency*100)} ms.")
         await self.delta_activity()
     
+
     async def delta_activity(self):
         activity = discord.Streaming(name='d.help', url='https://twitch.tv/glz007', game='Discord')
         await self.change_presence(status=discord.Status.online if not self.maintenance else discord.Status.dnd, activity=activity)
