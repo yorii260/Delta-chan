@@ -37,13 +37,13 @@ class HelpCog(commands.Cog):
                 for f in self.bot.get_cog(cog).get_commands():
                     
                     if len(f.parents) > 0:
-                        commands.append(x for x in f.root_parent)
+                        commands.append(x for x in f.parents)
                     
                     commands.append(f)
 
                 for x in commands:
                     text += f"`{x.name}` "
-                      
+
                 embed.add_field(name=self.bot.get_cog(cog).qualified_name, value=text, inline=True)
             
             embed.set_thumbnail(url=self.bot.user.avatar.url)

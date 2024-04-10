@@ -9,7 +9,7 @@ from colorama import Fore, Style
 cogs = ['social', 'help',
         'moderation', 'commandsError',
         'mongo', 'reminders',
-        "automod"]
+        "automod", "purge"]
 
 class Delta(commands.Bot): 
     
@@ -43,7 +43,7 @@ class Delta(commands.Bot):
                 self.log.info(f"Sucessfully loaded cogs.{cog} extension.")
             
             self.get_cog('Reminder').update_reminders.start()
-            #self.get_cog('Purge')._start()
+            self.get_cog('Purge').update_purge_time.start()
             print("="*30)
         
     

@@ -170,9 +170,8 @@ class SocialCommands(commands.Cog, name="Social"):
                     return await message.reply(f"<@{user}> está AFK com o motivo: `{reason.strip()}` {afk_date[0]}.")
                 else:
                     pass
-
-                
-        
+    
+    
         
 async def setup(bot: commands.Bot):
     await bot.add_cog(SocialCommands(bot))

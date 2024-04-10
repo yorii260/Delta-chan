@@ -255,10 +255,6 @@ class AutoPurgeButtons(discord.ui.View):
 
         x['automod_config']['auto_purge_config'].update(update)
         self.bot.mongo.automod.update_one({"_id": x['_id']}, {"$set":{"automod_config":x['automod_config']}})
-
-        async def callback(interaction):
-            print(interaction)
-
             
         return await interaction.response.send_message("O módulo Auto Purge foi desativado.")
     

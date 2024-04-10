@@ -8,89 +8,48 @@ import asyncio
 class Purge(commands.Cog):
 
     def __init__(self, bot: commands.Bot):
-        self.bot = bot
-
-        self.x: dict = [f for f in self.bot.mongo.automod.find()][0]['automod_config']['auto_purge_config']
-
-        self.channel = int(self.x.get("auto_purge_channel_id"))
-        self.delay = int(self.x.get("auto_purge_delay"))
-
+        self.bot = bot 
     
-    @tasks.loop(seconds=30)
-    async def update_purge_timer(self):
 
-        nt = self.x.get("next_purge")
-        channel = self.bot.get_channel(self.channel)
+    async def getting_all_messages(self, channel: discord.TextChannel) -> list[discord.Message]:
 
+        messages = []
+        count = 1
+        async for message in channel.history(limit=None, oldest_first=True):
+            messages.append(message)
 
-        if nt != "":
+            count += 1
+            await asyncio.sleep(3.5)
 
-            current_time = datetime.now()
-            iso = datetime.fromisoformat(str(nt))
-
-            if iso <= datetime.now():
-                
-                self.bot.log.info("Starting Auto Purge process.")
-                
-                try:
-                    
-                    messages = []
-                    async for message in channel.history(limit=None):
-                        messages.append(message) 
-                    
-                    else:
-
-                        self.bot.log.info("%s messages has been encountered in the current chat.", len(messages))
-                        await channel.delete_messages(messages,
-                                                      reason=f"Auto Purge | {self.bot.user.id}")
-                        
-                        update = {
-                            "next_purge": datetime.now() + timedelta(seconds=int(self.x.get("auto_purge_delay")))
-                        }
-                        x: dict = [f for f in self.bot.mongo.automod.find()][0]
-                        x['automod_config']['auto_purge_config'].update(update)
-                        
-                        self.bot.mongo.automod.update_one({"_id": x['_id']}, {"$set":{"automod_config":x['automod_config']}})
-                        
-                
-                except Exception as e:
-                    return self.bot.log.info("Um erro aconteceu no módulo Auto Purge: %s", e)
-                
-                return await channel.send(f"Auto Purge concluído com sucesso.\nPróximo purge será daqui <t:{int(iso.timestamp())}:R>") 
+            self.bot.log.info("%s message%s", count, "s" if count > 1 else "")
         
-        
-            else:    
-                current_time = datetime.now()
-                update = {
-                    "last_check": current_time
-                }
-                x: dict = [f for f in self.bot.mongo.automod.find()][0]
+        return messages
 
-                x['automod_config']['auto_purge_config'].update(update)
-                return self.bot.mongo.automod.update_one({"_id": x['_id']}, {"$set":{"automod_config":x['automod_config']}})
-        
+
+    @tasks.loop(seconds=10)
+    async def update_purge_time(self):
+
+        purge_info = [x for x in self.bot.mongo.automod.find()][0]['automod_config']['auto_purge_config']
+
+        auto_purge_id, auto_purge_channel_id, auto_purge_delay, auto_purge_guild_id, next_purge, last_check = purge_info.values()
+
+        if auto_purge_id != "":
+            
+            purge_time = datetime.fromisoformat(str(next_purge))
+
+            if purge_time < datetime.now() or purge_time == datetime.now():
+
+                msgs = await self.getting_all_messages()
+
+                return self.bot.dispatch("purge_timeout", msgs, purge_info)
         else:
-
-            current_time = datetime.now()
-            update = {
-                    "next_purge": current_time + timedelta(seconds=int(self.x.get("auto_purge_delay")))
-                }
-            x: dict = [f for f in self.bot.mongo.automod.find()][0]
-
-            x['automod_config']['auto_purge_config'].update(update)
-            return self.bot.mongo.automod.update_one({"_id": x['_id']}, {"$set":{"automod_config":x['automod_config']}})
-
-
-    def _start(self):
-
-        if self.x.get("auto_purge_id") != "":
-            self.bot.log.info("Starting Auto Purge looping process.")
-
-            if not self.update_purge_timer.is_running():
-                return self.update_purge_timer.start()
-        else:
-            return self.bot.log.warning("O módulo Auto Purge não está configurado, por isso sua ativação foi cancelada.")
+            self.update_purge_time.cancel()
         
+
+    @update_purge_time.before_loop
+    async def before_purge(self):
+        await self.bot.wait_until_ready()
+
 
 async def setup(bot: commands.Bot):
     await bot.add_cog(Purge(bot))
