@@ -3,7 +3,8 @@ from discord.ext import commands
 from pymongo.collection import Collection
 from discord import Button, ButtonStyle
 from helpers.utils import random_id
-
+from datetime import datetime, timedelta
+import asyncio
 
 class AutoModSelectMenu(discord.ui.Select):
     
@@ -237,6 +238,8 @@ class AutoPurgeButtons(discord.ui.View):
 
         self.bot = bot
 
+
+    @commands.has_permissions(administrator=True)
     @discord.ui.button(
         label="Desativar",
         custom_id="purge_desactive",
@@ -253,12 +256,65 @@ class AutoPurgeButtons(discord.ui.View):
             "next_purge": ""
         }
 
+        if x['automod_config']['auto_purge_config'].get("auto_purge_id") == "":
+            return await interaction.response.send_message("Atualmente o módulo está desativado.")
+        
         x['automod_config']['auto_purge_config'].update(update)
         self.bot.mongo.automod.update_one({"_id": x['_id']}, {"$set":{"automod_config":x['automod_config']}})
-            
+        
+        self.bot.get_cog("Purge").update_purge_time.cancel()
         return await interaction.response.send_message("O módulo Auto Purge foi desativado.")
     
-    
+
+    @commands.has_permissions(administrator=True)
+    @discord.ui.button(
+        label="Ativar",
+        custom_id="ativar_purge",
+        style=discord.ButtonStyle.green
+    )
+    async def act_button(self, interaction: discord.Interaction, button: discord.Button):
+
+        x = [x for x in self.bot.mongo.automod.find()][0]
+
+        class ChannelModal(discord.ui.Modal):
+
+            def __init__(self, bot: commands.Bot):
+                super().__init__(title="Auto Purge - Channel ID", timeout=50, custom_id="channel_purge")
+
+                self.channel = discord.ui.TextInput(label="ID do canal", placeholder="Digite aqui", required=True, min_length=1, max_length=50)
+                self.bot = bot 
+
+                self.add_item(self.channel)
+
+            async def on_submit(self, interaction: discord.Interaction):
+
+                update = {
+                    "auto_purge_channel_id": self.channel.value
+                }
+
+                x = [x for x in self.bot.mongo.automod.find()][0]
+
+                x['automod_config']['auto_purge_config'].update(update)
+                self.bot.mongo.automod.update_one({"_id": x['_id']}, {"$set":{"automod_config":x['automod_config']}})
+
+                return await interaction.response.send_message("O módulo foi ativado com sucesso!", ephemeral=True)
+
+        update = {
+            "auto_purge_id": random_id(),
+            "next_purge": datetime.now() + timedelta(seconds=3600),
+            "last_check": datetime.now(),
+            "auto_purge_guild_id": interaction.guild_id
+        }
+
+        if x['automod_config']['auto_purge_config'].get("auto_purge_id") != "":
+            return await interaction.response.send_message("O módulo já está ativado.")
+
+        x['automod_config']['auto_purge_config'].update(update)
+
+        self.bot.mongo.automod.update_one({"_id": x['_id']}, {"$set":{"automod_config":x['automod_config']}})
+        self.bot.get_cog("Purge").update_purge_time.start()
+
+        return await interaction.response.send_modal(ChannelModal(self.bot))
 
     
     
