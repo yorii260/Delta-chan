@@ -10,17 +10,18 @@ class HelpCog(commands.Cog):
         self.hidden_cogs = ['CommandsErrors', 'HelpCog', 'Mongo',
                             'Reminder', 'Purge']
         self.emotes = utils.Emotes()
+        
+        with open("src/assets/links.json", "r") as f:
+            self.links = load(f)
+
     
     @commands.command(
         name='help',
         description='Veja todos os meus comandos disponíveis.',
         hidden=True
     )
-    async def ajuda(self, ctx: commands.Context, command_name: str = None):
+    async def ajuda(self, ctx: commands.Context, *, command_name: str = None):
         
-        with open("src/assets/links.json", "r") as f:
-            r = load(f)
-
         
         if command_name is None:
             
@@ -32,25 +33,35 @@ class HelpCog(commands.Cog):
                 
                 text = ""
                 
-                commands=[]
+                commands_=[]
                 
                 for f in self.bot.get_cog(cog).get_commands():
                     
-                    if len(f.parents) > 0:
-                        commands.append(x for x in f.parents)
-                    
-                    commands.append(f)
+                    if isinstance(f, commands.Group):
 
-                for x in commands:
-                    text += f"`{x.name}` "
+                        subcmd = ""
+
+                        for subcommand in f.walk_commands():
+
+                            if subcommand.parents[0] == f:
+                                commands_.append(subcommand)
+                            else:
+                                continue
+                    
+                    commands_.append(f)
+
+                for x in commands_:
+                    text += f"`{self.bot.command_prefix}{x.name}` "
+                
+                
 
                 embed.add_field(name=self.bot.get_cog(cog).qualified_name, value=text, inline=True)
             
             embed.set_thumbnail(url=self.bot.user.avatar.url)
-            embed.set_image(url=r['help_image'])
+            embed.set_image(url=self.links['help_image'])
             return await ctx.reply(embed=embed)
 
-        command = self.bot.get_command(command_name)
+        command = self.bot.get_command(command_name) 
         
         if command is None:
             return await ctx.send(f"`{command_name}` não é um comando válido.")
@@ -81,7 +92,7 @@ class HelpCog(commands.Cog):
             name="Aliases do comando",
             value=aliases
         )
-        embed.set_image(url=r['help_image'])
+        embed.set_image(url=self.links['help_image'])
         return await ctx.reply(embed=embed)
     
 async def setup(bot: commands.Bot):

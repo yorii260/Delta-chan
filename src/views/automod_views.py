@@ -39,12 +39,17 @@ class AutoModSelectMenu(discord.ui.Select):
                 value=f"<#{x['auto_delete_channel_id']}>" if x['auto_delete_id'] != '' else "None",
                 inline=False
             )
-            embed.add_field(
-                name='Filtro',
-                value=f"{'Starts with ' if x['auto_delete_filter'].split(':')[0] == 'SW' else 'Ends with '}`{x['auto_delete_filter'].split(':')[1].capitalize()}`",
-                inline=False
-            )
-            return await interaction.response.send_message(embed=embed, ephemeral=True)
+
+            if x['auto_delete_filter'] != "":
+                embed.add_field(
+                    name='Filtro',
+                    value=f"{'Starts with ' if x['auto_delete_filter'].split(':')[0] == 'SW' else 'Ends with '}`{x['auto_delete_filter'].split(':')[1].capitalize()}`",
+                    inline=False
+                )
+            else:
+                pass 
+
+            return await interaction.response.send_message(embed=embed, ephemeral=True, view=AutoDeleteButtons(self.bot))
             
         elif self.values[0] == 'Auto Ban':
             
@@ -122,7 +127,7 @@ class AutomodConfigView(discord.ui.View):
         style=ButtonStyle.blurple
     )
     async def button_auto_del(self, interaction: discord.Interaction, button: Button):
-        return await interaction.response.send_modal(AutoDeleteModal(self.bot))
+        pass
     
     @discord.ui.button(
         label='Auto Ban',
@@ -318,4 +323,89 @@ class AutoPurgeButtons(discord.ui.View):
 
     
     
+class AutoDeleteButtons(discord.ui.View):
 
+    def __init__(self, bot: commands.Bot, *, timeout=50):
+        super().__init__(timeout=timeout)
+
+        self.bot = bot
+
+
+    @commands.has_permissions(administrator=True)
+    @discord.ui.button(
+        label="Desativar",
+        custom_id="delete_desactive",
+        style=discord.ButtonStyle.red
+    )
+    async def des_button(self, interaction: discord.Interaction, button: discord.Button):
+        x: dict = [f for f in self.bot.mongo.automod.find()][0]
+
+        update = {
+            "auto_delete_id": "",
+            "auto_delete_channel_id": "",
+            "auto_delete_filter":  "",
+            "auto_delete_punish": ""
+        }
+
+        if x['automod_config']['auto_delete_config'].get("auto_delete_id") == "":
+            return await interaction.response.send_message("Atualmente o módulo está desativado.")
+        
+        x['automod_config']['auto_delete_config'].update(update)
+        self.bot.mongo.automod.update_one({"_id": x['_id']}, {"$set":{"automod_config":x['automod_config']}})
+        
+        return await interaction.response.send_message("O módulo Auto Delete foi desativado.")
+    
+
+    @commands.has_permissions(administrator=True)
+    @discord.ui.button(
+        label="Ativar",
+        custom_id="ativar_delete",
+        style=discord.ButtonStyle.green
+    )
+    async def act_button(self, interaction: discord.Interaction, button: discord.Button):
+
+        x = [x for x in self.bot.mongo.automod.find()][0]
+
+
+        update = {
+            "auto_delete_id": random_id()
+        }
+
+        if x['automod_config']['auto_delete_config'].get("auto_delete_id") != "":
+            return await interaction.response.send_message("O módulo já está ativado.")
+
+        x['automod_config']['auto_delete_config'].update(update)
+        
+        class ChannelModal(discord.ui.Modal):
+
+            def __init__(self, bot: commands.Bot):
+                super().__init__(title="Auto Delete - Channel/Filter", timeout=50, custom_id="channel_delete")
+
+                self.channel = discord.ui.TextInput(label="ID do canal", placeholder="Digite aqui", required=True, min_length=1, max_length=50)
+                self.punish = discord.ui.TextInput(label="Filter", placeholder="Adicione SW:<filter> ou EW:<filter>", min_length=3, max_length=50)
+                self.bot = bot 
+
+                self.add_item(self.channel)
+                self.add_item(self.punish)
+
+            async def on_submit(self, interaction: discord.Interaction):
+
+                update = {
+                    "auto_delete_channel_id": self.channel.value,
+                    "auto_delete_filter": self.punish.value
+                }
+
+                x = [x for x in self.bot.mongo.automod.find()][0]
+
+                x['automod_config']['auto_delete_config'].update(update)
+                self.bot.mongo.automod.update_one({"_id": x['_id']}, {"$set":{"automod_config":x['automod_config']}})
+
+                return await interaction.response.send_message("O módulo foi ativado com sucesso!", ephemeral=True)
+        
+
+        await interaction.response.send_modal(ChannelModal(self.bot))
+        
+        return self.bot.mongo.automod.update_one({"_id": x['_id']}, {"$set":{"automod_config":x['automod_config']}})
+        
+
+        

@@ -114,8 +114,6 @@ class Mongo(commands.Cog):
                             msg += f"**Motivo**: `{item}`\n\n"
             
             return(msg)
-        else:
-            return None
     
     
     def audit_channel(self):
@@ -126,8 +124,6 @@ class Mongo(commands.Cog):
             
             return int(data[0]['audit_log_channel_id'])
         
-        else:
-            return None
     
 
     

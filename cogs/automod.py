@@ -14,7 +14,7 @@ import discord
 from datetime import timedelta, datetime
 from pymongo.collection import Collection
 from dateutil import tz
-from src.views.automod_views import AutomodView, AutomodConfigView, AutoPurgeButtons
+from src.views.automod_views import AutomodView, AutomodConfigView
 from discord.ext import tasks
 
 automod_config = {
@@ -158,32 +158,36 @@ class AutomodCog(commands.Cog, name="Automod"):
         # /////////////////////////////////////////////// # 
         
         ad_id = config['auto_delete_id']
-        filter = config['auto_delete_filter']
-        punish = config['auto_delete_punish']
-        channel = int(config['auto_delete_channel_id'])
-        
 
-        if (
-            not message.author.bot and 
-            message.channel.id == channel
-        ):
-            if filter != 'default':
-                
-                filter=filter.strip().split(':')
-                
-                if filter[0] == "SW":
-                    filter = message.content.lower().strip().startswith(filter[1].strip().lower())
-                elif filter[0] == "EW":
-                    filter = message.content.strip().lower().endswith(filter[1].strip().lower())
-                
-                
-            else:
-                filter = True 
-
-            if filter:
+        if ad_id != "":
+            filter = config['auto_delete_filter']
+            punish = config['auto_delete_punish']
+            channel = int(config['auto_delete_channel_id'])
             
-                return await message.delete()
-    
+
+            if (
+                not message.author.bot and 
+                message.channel.id == channel
+            ):
+                if filter != 'default':
+                    
+                    filter=filter.strip().split(':')
+                    
+                    if filter[0] == "SW":
+                        filter = message.content.lower().strip().startswith(filter[1].strip().lower())
+                    elif filter[0] == "EW":
+                        filter = message.content.strip().lower().endswith(filter[1].strip().lower())
+                    
+                    
+                else:
+                    filter = True 
+
+                if filter:
+                
+                    return await message.delete()
+
+        else:
+            return    
     
     @commands.Cog.listener()
     async def on_member_join(self, member: discord.Member):

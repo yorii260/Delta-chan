@@ -67,20 +67,28 @@ class Purge(commands.Cog):
         count = 1 
 
         try:
-
-            for msg in msgs:
-                await msg.delete()
-
-                self.bot.log.info("Purge Process: Deleted %s/%s messages.", count, msg_count)
-                count +=1
-                await asyncio.sleep(2.5)
             
-            update = {
-                "next_purge": datetime.now() + timedelta(seconds=int(delay))
-            }
-            purge_info['automod_config']['auto_purge_config'].update(update)
-            return self.bot.mongo.automod.update_one({"_id": purge_info['_id']}, {"$set":{"automod_config":purge_info['automod_config']}})
-        
+            if msg_count != 0:
+
+                for msg in msgs:
+                    await msg.delete()
+
+                    self.bot.log.info("Purge Process: Deleted %s/%s messages.", count, msg_count)
+                    count +=1
+
+                    del msgs[msgs.index(msg)]
+                    await asyncio.sleep(2.5)
+                
+                update = {
+                    "next_purge": datetime.now() + timedelta(seconds=int(delay))
+                }
+                purge_info['automod_config']['auto_purge_config'].update(update)
+                return self.bot.mongo.automod.update_one({"_id": purge_info['_id']}, {"$set":{"automod_config":purge_info['automod_config']}})
+
+            else:
+                return self.bot.log.info("O chat atual não possuí nenhuma mensagem, skipped.")
+            
+            
         except Exception as e:
             self.bot.log.warning("Um erro ocorreu: %s", e)
 
