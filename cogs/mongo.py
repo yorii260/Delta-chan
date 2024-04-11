@@ -42,37 +42,10 @@ class Mongo(commands.Cog):
     def afk(self):
         return self.db.get_collection('AFK')
     
-
     
     @property
     def automod(self):
         return self.db.get_collection('AUTOMOD_CONFIG')
-    
-    
-    @commands.Cog.listener()
-    async def on_message(self, message: discord.Message):
-        
-        if message.author.bot: 
-            return 
-        elif message.guild.id != int(os.getenv("guild_id")):
-            return
-        else:
-            
-            if (message.content.strip()[:1] == self.bot.command_prefix):
-                
-                user = self.bot.get_user(message.author.id)
-                
-                check = self.users.find_one({"id_": user.id})
-                
-                if check is None:
-                    return self.users.insert_one({
-                        "id_": user.id, 
-                        "nickname": user.name, 
-                        "avatar_url": user.avatar.url
-                    })
-                    
-                else:
-                    return
             
     
     async def insert_warn(self, user: discord.Member, guild_id: int, moderator: discord.Member, reason: str):

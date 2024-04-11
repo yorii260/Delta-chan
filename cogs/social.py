@@ -151,8 +151,8 @@ class SocialCommands(commands.Cog, name="Social"):
         return await ctx.send(f"{ctx.author.mention}, AFK ativado. Para remover-lo, basta enviar uma mensagem em qualquer chat que eu tenha permissão de ver.")
     
     
-    @commands.Cog.listener()
-    async def on_message(self, message: discord.Message):
+    """@commands.Cog.listener('on_message')
+    async def check_or_remove_afk(self, message: discord.Message):
     
         g = [f for f in self.bot.mongo.afk.find()]
         
@@ -169,7 +169,7 @@ class SocialCommands(commands.Cog, name="Social"):
                 elif message.author.id != user and user in [f.id for f in message.mentions]:
                     return await message.reply(f"<@{user}> está AFK com o motivo: `{reason.strip()}` {afk_date[0]}.")
                 else:
-                    pass
+                    pass"""
     
     
         

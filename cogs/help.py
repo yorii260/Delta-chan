@@ -21,79 +21,66 @@ class HelpCog(commands.Cog):
         hidden=True
     )
     async def ajuda(self, ctx: commands.Context, *, command_name: str = None):
-        
-        
+
+        embed = discord.Embed(color=0x800080)
+
+
         if command_name is None:
-            
-            embed = discord.Embed(title="Meus Comandos", description=f"Use `{self.bot.command_prefix}help <command_name>` para obter informações adicionais sobre tal comando.",color=0x800080)
-            
-            cogs = [x for x in self.bot.cogs if x not in self.hidden_cogs]
-            
+
+            cogs = [x for x in self.bot.cogs.values() if x.qualified_name not in self.hidden_cogs]
+
             for cog in cogs:
-                
-                text = ""
-                
-                commands_=[]
-                
-                for f in self.bot.get_cog(cog).get_commands():
+
+                commands = [x for x in cog.get_commands() and cog.walk_commands()]
+                text = "";
+
+
+                for command in commands:
                     
-                    if isinstance(f, commands.Group):
+                    if not command.hidden:
+                        text += f"`{command}`\n"
 
-                        subcmd = ""
-
-                        for subcommand in f.walk_commands():
-
-                            if subcommand.parents[0] == f:
-                                commands_.append(subcommand)
-                            else:
-                                continue
-                    
-                    commands_.append(f)
-
-                for x in commands_:
-                    text += f"`{self.bot.command_prefix}{x.name}` "
                 
+                embed.add_field(
+                    name=cog.qualified_name,
+                    value=text,
+                    inline=True
+                )
                 
-
-                embed.add_field(name=self.bot.get_cog(cog).qualified_name, value=text, inline=True)
-            
+            embed.title = "Meus Comandos <3"
+            embed.description = f"Use `{self.bot.command_prefix}help <command>` para obter informações adicionais sobre tal comando."
             embed.set_thumbnail(url=self.bot.user.avatar.url)
-            embed.set_image(url=self.links['help_image'])
+            embed.set_image(url=self.links.get("help_image"))
+
             return await ctx.reply(embed=embed)
 
-        command = self.bot.get_command(command_name) 
-        
-        if command is None:
-            return await ctx.send(f"`{command_name}` não é um comando válido.")
-
-        aliases = ''
-        
-        if len(command.aliases) > 0:
-            
-            for i in command.aliases:
-                aliases += f"`{i}` "
         else:
-            aliases = f'Não tem. {self.emotes.nhe}'
-            
-            
-        embed = discord.Embed(title=command.name,
-                              color=0x800080)
-       
-        embed.set_thumbnail(url=ctx.author.avatar.url)
-        embed.add_field(
-            name=f"{self.emotes.audit} Descrição do comando",
-            value=f"`{command.description or f'Não foi inserido. {self.emotes.nhe}'}`"
-        )
-        embed.add_field(
-            name=f"{self.emotes.info} Como usar",
-            value=f"`{command.usage or f'Não inserido. {self.emotes.nhe}'}`"
-        )
-        embed.add_field(
-            name="Aliases do comando",
-            value=aliases
-        )
-        embed.set_image(url=self.links['help_image'])
-        return await ctx.reply(embed=embed)
+
+            command = self.bot.get_command(command_name.lower())
+            aliases = "";
+
+            for x in command.aliases:
+                aliases += f"`{x.strip()}`\n"
+
+            embed.title = f"{command.cog_name}: {command.name}"
+            embed.add_field(
+                name=f"{self.emotes.audit} Descrição do comando",
+                value=f"`{command.description}`",
+                inline=True
+            )  
+            embed.add_field(
+                name=f"{self.emotes.info} Como usar",
+                value=f"`{command.usage}`",
+                inline=True 
+            )
+            embed.add_field(
+                name=f"Aliases do comando",
+                value=aliases, 
+                inline=True
+            )
+
+            embed.set_thumbnail(url=self.bot.user.avatar.url)
+            return await ctx.reply(embed=embed)
     
 async def setup(bot: commands.Bot):
     await bot.add_cog(HelpCog(bot))

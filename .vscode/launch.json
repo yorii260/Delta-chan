@@ -4,11 +4,12 @@
     // Para obter mais informações, acesse: https://go.microsoft.com/fwlink/?linkid=830387
     "version": "0.2.0",
     "configurations": [
+        {"name":"Depurador do Python: Delta-Chan","type":"debugpy","request":"launch","program":"${file}","console":"integratedTerminal"},
         {
-            "name": "Python: Arquivo Atual",
-            "type": "python",
+            "name": "Delta-Chan Runner",
+            "type": "debugpy",
             "request": "launch",
-            "program": "C:\\Users\\Samsung\\Desktop\\Moderation-Bot\\main.py",
+            "program": "C:\\Users\\yori0\\OneDrive\\Documentos\\GitHub\\Delta-chan\\main.py",
             "console": "integratedTerminal",
             "justMyCode": true
         }

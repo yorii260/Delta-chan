@@ -1,6 +1,5 @@
 import discord 
 from discord.ext import commands 
-from cogs.automod import AutomodException
 
 class CommandsErrors(commands.Cog):
     

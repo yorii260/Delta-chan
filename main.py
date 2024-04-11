@@ -3,13 +3,19 @@ from discord.ext import commands
 from discord import Intents 
 import config
 import logging, sys 
-from colorama import Fore, Style
-
+from colorama import Fore
+from pymongo.collection import Collection
+import cogs as c
 
 cogs = ['social', 'help',
         'moderation', 'commandsError',
-        'mongo', 'reminders',
-        "automod", "purge"]
+        'mongo', "automod"]
+
+events = [
+    "listeners",
+    "tasks_running"
+]
+
 
 class Delta(commands.Bot): 
     
@@ -41,9 +47,13 @@ class Delta(commands.Bot):
             for cog in cogs:
                 await self.load_extension(f'cogs.{cog}')
                 self.log.info(f"Sucessfully loaded cogs.{cog} extension.")
-            
-            self.get_cog('Reminder').update_reminders.start()
-            self.get_cog('Purge').update_purge_time.start()
+
+        if len(events) > 0:
+
+            for event in events:
+                await self.load_extension(f"events.{event}")
+                self.log.info("Sucessfully loaded events.%s extension.", event)
+
             print("="*30)
         
     
@@ -59,8 +69,16 @@ class Delta(commands.Bot):
     
     
     @property
-    def mongo(self):
+    def mongo(self) -> c.Mongo:
         return self.get_cog("Mongo")
+    
+    @property
+    def auto_delete(self) -> c.AutoDelete:
+        return c.AutoDelete(self)
+    
+    @property
+    def auto_purge(self) -> c.AutoPurge:
+        return c.AutoPurge(self)
     
     
     def setup_logging(self):

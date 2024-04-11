@@ -69,7 +69,7 @@ class Moderation(commands.Cog):
         return await ctx.send(embed=em)
         
     
-    @commands.Cog.listener()
+    """@commands.Cog.listener()
     async def on_warn_submit(self, warned_user: discord.Member, moderator_user: discord.Member, reason: str):
         
         channel = self.bot.mongo.audit_channel()
@@ -83,7 +83,7 @@ class Moderation(commands.Cog):
                            color=0x800080)
         em.set_thumbnail(url=warned_user.avatar.url)
         
-        return await channel.send(embed=em)
+        return await channel.send(embed=em)"""
     
         
     @commands.has_guild_permissions(administrator=True)
