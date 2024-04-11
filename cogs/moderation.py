@@ -177,6 +177,20 @@ class Moderation(commands.Cog):
         
         return await ctx.reply(f"Um total de `{len(users)}` usuários foram banidos com sucesso.")
     
+
+    @commands.is_owner()
+    @commands.command(name="show_automod",
+                      usage="d.show_automod config",
+                      hidden=True,
+                      aliases=("sd",))
+    async def sw(self, ctx: commands.Context, config: str = None):
+
+        if config is None:
+            return await ctx.reply("Argumento inválido.")
+        
+        data = [x for x in self.bot.mongo.automod.find()][0]['automod_config'][config]
+
+        return await ctx.send(f"```json\n{data}\n```", ephemeral=True)
     
 async def setup(bot: commands.Bot):
     await bot.add_cog(Moderation(bot))

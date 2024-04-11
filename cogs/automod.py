@@ -53,91 +53,6 @@ class AutomodException(commands.CheckFailure):
     def __init__(self, message: str, *args):
         super().__init__(message, *args)
         self.message = message 
-        
-        
-class AutomodDatabase:
-    
-    def __init__(self, database: Collection):
-        
-        self.data = database
-        self.dict = [f for f in self.data.find()]
-        self._id = self.dict[0]['_id']
-    
-    
-    def update_moderator_roles(self, roles: discord.Role | list[discord.Role]):
-        
-        ammr = self.dict[0]['automod_config']
-        
-        if type(roles) == list and len(roles) > 1:
-            
-            for role in roles:
-                
-                if role.id in ammr['automod_moderator_roles']:
-                    raise AutomodException(f"O role `{role.id}` has already in the database, skipped.")
-
-                ammr['automod_moderator_roles'].append(role.id)
-                
-            return self.data.update_one({"_id": self._id}, {"$set": {"automod_config":ammr}})
-        else:
-            
-            if roles.id in ammr['automod_moderator_roles']:
-                raise AutomodException(f"O cargo {role.mention if role.mentionable else role.id} já está na database.")
-            ammr['automod_moderator_roles'].append(roles.id)
-            return self.data.update_one({"_id": self._id}, {"$set": {"automod_config":ammr}}, upsert=True)
-    
-    
-    def update_ignored_roles(self, roles: discord.Role | list[discord.Role]):
-        
-        ammr = self.dict[0]['automod_config']
-        
-        if type(roles) == list and len(roles) > 1:
-            
-            for role in roles:
-                
-                if role.id in ammr['automod_ignored_roles']:
-                    raise AutomodException(f"O cargo {role.mention if role.mentionable else role.id} já está na database.")
-
-                ammr['automod_ignored_roles'].append(role.id)
-                
-            return self.data.update_one({"_id": self._id}, {"$set": {"automod_config":ammr}})
-        else:
-            
-            if roles.id in ammr['automod_ignored_roles']:
-                raise AutomodException(f"O cargo {roles.mention if roles.mentionable else roles.id} já está na database.")
-            ammr['automod_ignored_roles'].append(roles.id)
-            return self.data.update_one({"_id": self._id}, {"$set": {"automod_config":ammr}}, upsert=True)
-    
-    
-    def update_auto_delete(self, update):
-        
-        d: dict = self.dict[0]['automod_config']
-        d['auto_delete_config'].update(update)
-        
-        return self.data.update_one({"_id": self._id}, {"$set":{"automod_config":d}})
-
-    
-    def update_auto_ban(self, update):
-        
-        d: dict = self.dict[0]['automod_config']
-        d['auto_ban_config'].update(update)
-        
-        return self.data.update_one({"_id": self._id}, {"$set":{"automod_config":d}})
-    
-    
-    def update_auto_purge(self, update):
-        
-        d: dict = self.dict[0]['automod_config']
-        d['auto_purge_config'].update(update)
-        
-        return self.data.update_one({"_id": self._id}, {"$set":{"automod_config":d}})
-
-    
-    def update_kick_new_account(self, update):
-        
-        d: dict = self.dict[0]['automod_config']
-        d['kick_new_account_config'].update(update)
-        
-        return self.data.update_one({"_id": self._id}, {"$set":{"automod_config":d}})
     
     
 class AutomodCog(commands.Cog, name="Automod"):
@@ -146,15 +61,13 @@ class AutomodCog(commands.Cog, name="Automod"):
         
         self.bot = bot
         self.log = self.bot.log 
-        
-        self.automod_ = AutomodDatabase(self.bot.mongo.automod)
     
     
     @commands.Cog.listener('on_message')
     async def automod_auto_delete(self, message: discord.Message):
         
-        config = self.automod_.dict[0]['automod_config']['auto_delete_config']
-        
+        config = [x for x in self.bot.mongo.automod.find()][0]['automod_config']['auto_delete_config']
+    
         # /////////////////////////////////////////////// # 
         
         ad_id = config['auto_delete_id']
@@ -187,9 +100,9 @@ class AutomodCog(commands.Cog, name="Automod"):
                     return await message.delete()
 
         else:
-            return    
+            return 
     
-    @commands.Cog.listener()
+    """@commands.Cog.listener()
     async def on_member_join(self, member: discord.Member):
         
         config = self.automod_.kick_new_account
@@ -201,7 +114,7 @@ class AutomodCog(commands.Cog, name="Automod"):
         user_time = member.created_at.astimezone(tz=tz.UTC)
         
         if time > user_time or time == user_time:
-            return await member.kick(reason="Filtro de contas fakes ativo!")
+            return await member.kick(reason="Filtro de contas fakes ativo!")"""
 
 
     @commands.group(

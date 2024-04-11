@@ -45,6 +45,7 @@ class Purge(commands.Cog):
                 msgs = await self.getting_all_messages(auto_purge_channel)
 
                 return self.bot.dispatch("purge_timeout", msgs, purge_info, delay)
+                
 
             else:
                 purge_info['automod_config']['auto_purge_config'].update({"last_check": datetime.now()})
@@ -86,9 +87,18 @@ class Purge(commands.Cog):
                 return self.bot.mongo.automod.update_one({"_id": purge_info['_id']}, {"$set":{"automod_config":purge_info['automod_config']}})
 
             else:
+
+                update = {
+                    "next_purge": datetime.now() + timedelta(seconds=int(delay))
+                }
+                purge_info['automod_config']['auto_purge_config'].update(update)
+                self.bot.mongo.automod.update_one({"_id": purge_info['_id']}, {"$set":{"automod_config":purge_info['automod_config']}})
+                
                 return self.bot.log.info("O chat atual não possuí nenhuma mensagem, skipped.")
+
+                
             
-            
+
         except Exception as e:
             self.bot.log.warning("Um erro ocorreu: %s", e)
 

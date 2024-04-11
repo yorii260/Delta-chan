@@ -71,6 +71,7 @@ class AutoModSelectMenu(discord.ui.Select):
             
             embed.title = 'Auto Purge'
             z: dict = [f for f in database.find()][0]['automod_config']['auto_purge_config']
+            date = lambda date: datetime.fromisoformat(str(date))
             
             embed.add_field(
                 name='Active',
@@ -83,11 +84,18 @@ class AutoModSelectMenu(discord.ui.Select):
                 inline=False
             )
             embed.add_field(
-                name='Purge delay',
-                value=f"`{round(z['auto_purge_delay']/60, 1)} minutes`" if z['auto_purge_id'] != '' else "Não definido.",
+                name='Next purge',
+                value=f"<t:{int(date(z['next_purge']).timestamp())}:R>" if z['auto_purge_id'] != '' else "Não definido.",
                 inline=False
             )
-            return await interaction.response.send_message(embed=embed, ephemeral=True, view=AutoPurgeButtons(self.bot))
+
+            if z['auto_purge_id'] != '':
+                embed.add_field(
+                    name="Last check",
+                    value=f"<t:{int(date(z['last_check']).timestamp())}:R>",
+                    inline=False
+                )
+            return await interaction.response.send_message(embed=embed, view=AutoPurgeButtons(self.bot))
         
         elif self.values[0] == 'Auto Kick':
             
