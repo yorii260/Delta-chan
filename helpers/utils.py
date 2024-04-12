@@ -70,3 +70,21 @@ class Emotes:
     @property
     def info(self) -> Emoji:
         return self.custom[1]['info']
+
+
+    @property
+    def banned(self) -> Emoji:
+        return self.custom[1].get("banned_user")
+    
+    @property
+    def kick(self) -> Emoji:
+        return self.custom[1].get("kick")
+
+
+    @property
+    def purge(self) -> Emoji:
+        return self.custom[1].get("purge")
+    
+    @property
+    def delete(self) -> Emoji:
+        return self.custom[1].get("delete")

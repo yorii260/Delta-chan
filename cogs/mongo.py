@@ -3,7 +3,7 @@ import discord
 from discord.ext import commands 
 import os
 from helpers import utils
-import re
+
 
 class Mongo(commands.Cog):
     

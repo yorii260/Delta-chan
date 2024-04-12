@@ -1,7 +1,7 @@
 from discord.ext import commands 
 import discord
 from src.views.moderation_views import BanView, ConfirmEditWarn
-import typing
+
 
 class Moderation(commands.Cog):
     

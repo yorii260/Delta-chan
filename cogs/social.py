@@ -6,7 +6,6 @@ import random
 from datetime import datetime, timedelta
 import re
 from dateutil import tz 
-from json import load 
 
 
 class SocialCommands(commands.Cog, name="Social"):
@@ -151,27 +150,5 @@ class SocialCommands(commands.Cog, name="Social"):
         return await ctx.send(f"{ctx.author.mention}, AFK ativado. Para remover-lo, basta enviar uma mensagem em qualquer chat que eu tenha permissão de ver.")
     
     
-    """@commands.Cog.listener('on_message')
-    async def check_or_remove_afk(self, message: discord.Message):
-    
-        g = [f for f in self.bot.mongo.afk.find()]
-        
-        for x in range(0, len(g)):
-            
-            id_, user, guild, reason, afk_date = g[x].values()
-            
-            if message.guild != None and message.guild.id == guild and not message.author.bot:
-                
-                if message.author.id == user and not message.content.startswith(self.bot.command_prefix):
-                    self.bot.mongo.afk.delete_one({"_id": id_})
-                    return await message.reply(f"<@{user}>, o seu AFK foi removido.")
-                
-                elif message.author.id != user and user in [f.id for f in message.mentions]:
-                    return await message.reply(f"<@{user}> está AFK com o motivo: `{reason.strip()}` {afk_date[0]}.")
-                else:
-                    pass"""
-    
-    
-        
 async def setup(bot: commands.Bot):
     await bot.add_cog(SocialCommands(bot))

@@ -12,7 +12,7 @@ from discord.ext import commands
 import discord
 from datetime import datetime
 from pymongo.collection import Collection
-from src.views.automod_views import AutomodView, AutomodConfigView
+from src.views.automod_views import AutomodView
 
 
 class Automod:
@@ -49,16 +49,12 @@ class AutoDelete(Automod):
             return None 
     
     @property
-    def filter(self) -> str | None:
-
-        fil = self.config.get("auto_delete_filter").strip()
-
-        if len(fil) > 0: return fil.split(":")[1]
-        else: return None
+    def filter(self) -> str:
+        return self.config.get("auto_delete_filter")
     
     @property
-    def punish(self) -> any:
-        return self.config.get("auto_delete_punish")
+    def type(self) -> str:
+        return self.config.get("auto_delete_type")
 
 
     def update(self, update: dict):
@@ -123,45 +119,7 @@ class AutomodCog(commands.Cog, name="Automod"):
     def __init__(self, bot: commands.Bot):
         
         self.bot = bot
-    
-    
-    @commands.Cog.listener('on_message')
-    async def automod_auto_delete(self, message: discord.Message):
-    
-        # /////////////////////////////////////////////// # 
-        
-        ad_id = self.bot.auto_delete.id_
-
-        if ad_id is not None:
-
-            filter = self.bot.auto_delete.filter
-            punish = self.bot.auto_delete.punish
-            channel = self.bot.auto_delete.channel
-            
-
-            if (
-                not message.author.bot and 
-                message.channel.id == channel.id
-            ):
-                if filter != 'default':
-                    
-                    filter=filter.strip().split(':')
-                    
-                    if filter[0] == "SW":
-                        filter = message.content.lower().strip().startswith(filter[1].strip().lower())
-                    elif filter[0] == "EW":
-                        filter = message.content.strip().lower().endswith(filter[1].strip().lower())
-                    
-                    
-                else:
-                    filter = True 
-
-                if filter:
-                
-                    return await message.delete()
-
-        else:
-            return 
+         
     
     @commands.group(
         name='automod',
@@ -182,19 +140,6 @@ class AutomodCog(commands.Cog, name="Automod"):
         
         embed.set_thumbnail(url=ctx.author.avatar.url)
         await ctx.send(embed=embed, view=AutomodView(self.bot))
-
-    
-    @auto.command(
-        name='config',
-        description = "Veja e modifique as configurações de todos os módulos.",
-        usage = 'd.automod config',
-        aliases=("cf",)
-    )
-    async def cf(self, ctx: commands.Context):
-        
-        embed = discord.Embed(title='Automod Config', color=0xff0000)
-        embed.description = "Veja as atuais configurações do atual servidor."
-        return await ctx.send(embed=embed, view=AutomodConfigView(self.bot))
     
 
 async def setup(bot: commands.Bot):

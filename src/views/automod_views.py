@@ -1,19 +1,21 @@
 import discord
 from discord.ext import commands
 from pymongo.collection import Collection
-from discord import Button, ButtonStyle
-from helpers.utils import random_id
+from helpers.utils import random_id, Emotes
 from datetime import datetime, timedelta
-import asyncio
+
 
 class AutoModSelectMenu(discord.ui.Select):
     
     def __init__(self, bot: commands.Bot):
+
+        self.emotes = Emotes()
+
         options = [
-            discord.SelectOption(label='Auto Delete', emoji='💀', description='Informações sobre este módulo.'),
-            discord.SelectOption(label='Auto Ban', emoji='💀', description='Informações sobre este módulo.'),
-            discord.SelectOption(label='Auto Purge', emoji='💀', description='Informações sobre este módulo.'),
-            discord.SelectOption(label='Auto Kick', emoji='💀', description='Informações sobre este módulo.')
+            discord.SelectOption(label='Auto Delete', emoji=self.emotes.delete, description='Veja e gerencie o módulo Auto Delete.'),
+            discord.SelectOption(label='Auto Ban', emoji=self.emotes.banned, description='Veja e gerencie o módulo Auto Ban.'),
+            discord.SelectOption(label='Auto Purge', emoji=self.emotes.purge, description='Veja e gerencie o módulo Auto Purge'),
+            discord.SelectOption(label='Auto Kick', emoji=self.emotes.kick, description='Veja e gerencie o módulo Auto Kick')
         ]
         self.bot = bot
         super().__init__(placeholder='Selecione uma opção', custom_id='automod_select_menu', max_values=1, min_values=1, options=options)
@@ -40,10 +42,10 @@ class AutoModSelectMenu(discord.ui.Select):
                 inline=False
             )
 
-            if x['auto_delete_filter'] != "":
+            if x['auto_delete_filter'] not in ["", "default"]:
                 embed.add_field(
                     name='Filtro',
-                    value=f"{'Starts with ' if x['auto_delete_filter'].split(':')[0] == 'SW' else 'Ends with '}`{x['auto_delete_filter'].split(':')[1].capitalize()}`",
+                    value=f"{'Ends with' if self.bot.auto_delete.type == 'EW' else 'Starts with'} `{self.bot.auto_delete.filter}`",
                     inline=False
                 )
             else:
@@ -104,102 +106,21 @@ class AutoModSelectMenu(discord.ui.Select):
             
             embed.add_field(
                 name='Active',
-                value='✅' if xy['kick_id'] != '' else '❌',
+                value='✅' if xy['auto_kick_id'] != '' else '❌',
                 inline=False 
             )
             embed.add_field(
                 name='Min time to kick new users',
-                value=xy['kick_minimum_time'] if xy['kick_id'] != '' else 'Não definido.'
+                value=xy['auto_kick_minimum_time'] if xy['auto_kick_id'] != '' else 'Não definido.'
             )
             return await interaction.response.send_message(embed=embed, ephemeral=True)
             
-        
-
 
 class AutomodView(discord.ui.View):
     def __init__(self, bot, *, timeout=180):
         super().__init__(timeout=timeout)
         self.add_item(AutoModSelectMenu(bot))
-    
-
-class AutomodConfigView(discord.ui.View):
-    
-    def __init__(self, bot: commands.Bot, *, timeout=60):
-        super().__init__(timeout=timeout)
-        
-        self.bot = bot 
-    
-    @discord.ui.button(
-        label='Auto Delete',
-        custom_id='auto_delete_button',
-        style=ButtonStyle.blurple
-    )
-    async def button_auto_del(self, interaction: discord.Interaction, button: Button):
-        pass
-    
-    @discord.ui.button(
-        label='Auto Ban',
-        custom_id='auto_ban_button',
-        style=ButtonStyle.blurple
-    )
-    async def button_auto_ban(self, interaction: discord.Interaction, button: Button):
-        pass
-    
-    @discord.ui.button(
-        label='Auto Kick',
-        custom_id='auto_kick_button',
-        style=ButtonStyle.blurple
-    )
-    async def button_auto_kick(self, interaction: discord.Interaction, button: Button):
-        pass
-    
-    @discord.ui.button(
-        label='Auto Purge',
-        custom_id='auto_purge_button',
-        style=ButtonStyle.blurple
-    )
-    async def button_auto_purge(self, interaction: discord.Interaction, button: Button):
-        return await interaction.response.send_modal(AutoPurgeModal(self.bot))
-    
-
-class AutoDeleteModal(discord.ui.Modal):
-    
-    def __init__(self, bot: commands.Bot):
-        super().__init__(title='Auto Delete', timeout=60, custom_id='auto_delete_modal')
-        
-        self.filter = discord.ui.TextInput(label='Filter', 
-                                           placeholder='Digite a palavra-chave.', 
-                                           min_length=2, 
-                                           max_length=50, 
-                                           style=discord.TextStyle.short,
-                                           custom_id='filter_text')
-
-        self.channel = discord.ui.TextInput(
-            label="ID do canal",
-            custom_id='auto_del_channel',
-            placeholder='Digite ou cole o id do canal.',
-            max_length=20,
-            min_length=1
-        )
-        
-        self.bot = bot
-        self.add_item(self.filter)
-        self.add_item(self.channel)
-        
-    async def on_submit(self, interaction: discord.Interaction):
-        
-        update = {
-            "auto_delete_channel_id": int(self.channel.value),
-            "auto_delete_filter": f"SW:{self.filter.value}",
-            "auto_delete_punish": "",
-            "auto_delete_id": random_id()
-        }
-        x: dict = [f for f in self.bot.mongo.automod.find()][0]
-        x['automod_config']['auto_delete_config'].update(update)
-        if self.filter.value != '':
-            await interaction.response.send_message(f"{interaction.user.mention}, obrigado!", ephemeral=True)
-            return self.bot.mongo.automod.update_one({"_id": x['_id']}, {"$set":{"automod_config":x['automod_config']}})
-    
+       
     
 class AutoPurgeModal(discord.ui.Modal):
 
@@ -352,7 +273,7 @@ class AutoDeleteButtons(discord.ui.View):
             "auto_delete_id": "",
             "auto_delete_channel_id": "",
             "auto_delete_filter":  "",
-            "auto_delete_punish": ""
+            "auto_delete_type": ""
         }
 
         if x['automod_config']['auto_delete_config'].get("auto_delete_id") == "":
@@ -390,17 +311,20 @@ class AutoDeleteButtons(discord.ui.View):
                 super().__init__(title="Auto Delete - Channel/Filter", timeout=50, custom_id="channel_delete")
 
                 self.channel = discord.ui.TextInput(label="ID do canal", placeholder="Digite aqui", required=True, min_length=1, max_length=50)
-                self.punish = discord.ui.TextInput(label="Filter", placeholder="Adicione SW:<filter> ou EW:<filter>", min_length=3, max_length=50)
+                self.filter = discord.ui.TextInput(label="Filter", placeholder="Digite a mensagem de referencia para apagar.", min_length=3, max_length=50)
+                self.type = discord.ui.TextInput(label="Type of filter", placeholder="EW: Ends With | SW: Starts With", min_length=2, max_length=2)
                 self.bot = bot 
 
                 self.add_item(self.channel)
-                self.add_item(self.punish)
+                self.add_item(self.filter)
+                self.add_item(self.type)
 
             async def on_submit(self, interaction: discord.Interaction):
 
                 update = {
                     "auto_delete_channel_id": self.channel.value,
-                    "auto_delete_filter": self.punish.value
+                    "auto_delete_filter": self.filter.value,
+                    "auto_delete_type": self.type.value
                 }
 
                 x = [x for x in self.bot.mongo.automod.find()][0]

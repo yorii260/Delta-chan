@@ -1,6 +1,5 @@
 import discord
 from discord.ext import commands 
-import cogs as c 
 from datetime import datetime, timedelta
 import asyncio
 
@@ -103,6 +102,44 @@ class GeralEventListener(commands.Cog):
 
         except Exception as e:
             self.bot.log.warning("Um erro ocorreu: %s", e)
+    
+
+    @commands.Cog.listener('on_message')
+    async def automod_auto_delete(self, message: discord.Message):
+    
+        # /////////////////////////////////////////////// # 
+        
+        ad_id = self.bot.auto_delete.id_
+
+        if ad_id is not None:
+
+            filter = self.bot.auto_delete.filter
+            type = self.bot.auto_delete.type
+            channel = self.bot.auto_delete.channel
+            
+
+            if (
+                not message.author.bot and 
+                message.channel.id == channel.id
+            ):
+                if filter != 'default':
+                    
+                    if type == "SW":
+                        filter = bool(message.content.lower().strip().startswith(filter.strip().lower()))
+                    elif type == "EW":
+                        filter = bool(message.content.strip().lower().endswith(filter.strip().lower()))
+                    else:
+                        pass
+
+                    self.bot.log.info(filter)
+                    
+                    
+                else:
+                    filter = True 
+
+                if filter:
+                
+                    return await message.delete()
     
 
 async def setup(bot: commands.Bot):
