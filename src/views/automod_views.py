@@ -3,7 +3,7 @@ from discord.ext import commands
 from pymongo.collection import Collection
 from helpers.utils import random_id, Emotes
 from datetime import datetime, timedelta
-
+from helpers import checks
 
 class AutoModSelectMenu(discord.ui.Select):
     
@@ -19,7 +19,8 @@ class AutoModSelectMenu(discord.ui.Select):
         ]
         self.bot = bot
         super().__init__(placeholder='Selecione uma opção', custom_id='automod_select_menu', max_values=1, min_values=1, options=options)
-        
+    
+    
     async def callback(self, interaction: discord.Interaction):
         
         embed = discord.Embed(color=0x800080)
@@ -172,8 +173,7 @@ class AutoPurgeButtons(discord.ui.View):
 
         self.bot = bot
 
-
-    @commands.has_permissions(administrator=True)
+    
     @discord.ui.button(
         label="Desativar",
         custom_id="purge_desactive",

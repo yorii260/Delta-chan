@@ -1,6 +1,8 @@
 from discord.ext import commands 
 import discord
 from src.views.moderation_views import BanView, ConfirmEditWarn
+from helpers import converters
+import time 
 
 
 class Moderation(commands.Cog):
@@ -67,26 +69,10 @@ class Moderation(commands.Cog):
         em = discord.Embed(title=f"{user.name} Warns", description=user_ if user_ is not None else "Nada.", color=0x800080)
         em.set_thumbnail(url=user.avatar.url)
         return await ctx.send(embed=em)
-        
-    
-    """@commands.Cog.listener()
-    async def on_warn_submit(self, warned_user: discord.Member, moderator_user: discord.Member, reason: str):
-        
-        channel = self.bot.mongo.audit_channel()
-
-        if channel is None:
-            return 
-        
-        channel = self.bot.get_channel(int(channel))
-        
-        em = discord.Embed(title=f"{warned_user.name} recebu um aviso.", description=f"**Moderador**: {moderator_user.mention}\n**Motivo**: `{reason}`",
-                           color=0x800080)
-        em.set_thumbnail(url=warned_user.avatar.url)
-        
-        return await channel.send(embed=em)"""
     
         
     @commands.has_guild_permissions(administrator=True)
+    @commands.guild_only()
     @commands.command(name='set_audit_channel',
                       description="Adicione um canal para os logs do bot.",
                       usage="d.sac <channel>",
@@ -145,38 +131,22 @@ class Moderation(commands.Cog):
 
     
     @commands.bot_has_guild_permissions(ban_members=True)
-    @commands.has_permissions(ban_members=True)
     @commands.command(
         name='massban',
         description='Bane vários usuários utilizando o id.',
         usage='d.massban user1, user2',
         aliases=('mb',)
     )
-    async def massban(self, ctx: commands.Context, *args: int | str | discord.User):
+    async def massban(self, ctx: commands.Context,  *, users: converters.MassBanConverter):
         
-        users = []
-        reason = ''
+        for x in users[0]:
+
+            await x.ban(reason="This user has been banned by MasssBan command.")
+            time.sleep(1.1)
         
-        for i in args:
-            
-            if type(i) in (int, discord.User):
-                users.append(i if type(i) == int else i.id) 
-            
-            else:
-                reason += f'{i} '
-        
-        
-        for user in users:
-            
-            try:
-                user = self.bot.get_user(user)
-                
-                await ctx.guild.ban(user, reason=reason)
-            except Exception as e:
-                self.bot.log.warning(e)
-        
-        return await ctx.reply(f"Um total de `{len(users)}` usuários foram banidos com sucesso.")
-    
+        return await ctx.send(f"No total, `{len(users[0])}` foram banidos com sucesso. {f' Enquanto `{users[1]}` não foram banidos por conta de serem usuários inválidos.'if users[1] > 0 else ''}")
+
+
 
     @commands.is_owner()
     @commands.command(name="show_automod",

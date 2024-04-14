@@ -47,7 +47,11 @@ class CommandsErrors(commands.Cog):
             return await ctx.send(f"O membro `{error.argument}` não foi encontrado.")
 
         elif isinstance(error, commands.CheckFailure):
-            return await ctx.send(error.message)
+            
+            try:
+                return await ctx.send(error.message)
+            except:
+                return
 
         self.bot.log.warning("Ignoring except on command %s for user %s\n%s", ctx.command.name, ctx.author.name, error)
         

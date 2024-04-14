@@ -1,6 +1,6 @@
 from discord.ext import commands
 import discord 
-from helpers import utils
+from helpers import utils, converters
 from src.views.SocialViews import UiView
 import random
 from datetime import datetime, timedelta
@@ -85,9 +85,9 @@ class SocialCommands(commands.Cog, name="Social"):
                       description='Adicione um lembrete e eu irei te lembrar!',
                       aliases=("rm",),
                       usage='d.remind <time> <remind>')
-    async def remind(self, ctx: commands.Context, time: str, *, reminder: str):
+    async def remind(self, ctx: commands.Context, reminder: converters.DateConverter, *, reason: str):
         
-        x = [x for x in re.sub(r"[0-9]", '.', time).strip().split('.') if x != '']
+        '''x = [x for x in re.sub(r"[0-9]", '.', time).strip().split('.') if x != '']
         y = [x for x in re.sub("[a-zA-Z]", '.', time).strip().split('.') if x != '']
         
         inc = 0 
@@ -99,10 +99,10 @@ class SocialCommands(commands.Cog, name="Social"):
             elif r in ['s', 'seconds', 'segundos']:
                 inc += int(y[x.index(r)])
             elif r in ['h', 'hours', 'horas']:
-                inc += int(y[x.index(r)])*3600
+                inc += int(y[x.index(r)])*3600'''
             
         
-        increment = datetime.now() + timedelta(seconds=inc)
+        increment = datetime.now() + reminder
         embed = discord.Embed(title="Lembrete registrado!", description=f"Pode ficar tranquilo(a) que eu irei te avisar!\nTe vejo em <t:{int(increment.timestamp())}:R>",
                               color=0x800080)
         embed.set_thumbnail(url=ctx.author.avatar.url)
@@ -115,7 +115,7 @@ class SocialCommands(commands.Cog, name="Social"):
                 {
                     "user_id": ctx.author.id,
                     "channel_id": ctx.channel.id,
-                    "remind": reminder,
+                    "remind": reason,
                     "in": increment,
                     "last_check": datetime.now()
                 }

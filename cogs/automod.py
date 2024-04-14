@@ -1,19 +1,8 @@
-"""
-Automod - DeltaChan
-
-- Auto Delete
-- Kick New Account
-- Auto Ban
-- Auto Purge
-
-"""
-
 from discord.ext import commands 
 import discord
 from datetime import datetime
 from pymongo.collection import Collection
-from src.views.automod_views import AutomodView
-
+from src.views.automod_views import AutomodView 
 
 class Automod:
 
@@ -119,8 +108,8 @@ class AutomodCog(commands.Cog, name="Automod"):
     def __init__(self, bot: commands.Bot):
         
         self.bot = bot
+        
          
-    
     @commands.group(
         name='automod',
         description='Comandos relacionados à moderação automática.',

@@ -62,9 +62,9 @@ class RunningTasks(commands.Cog):
 
                 msgs = await self.getting_all_messages(auto_purge_channel)
 
-                return self.bot.dispatch("purge_timeout", msgs, delay)
+                if len(msgs) > 0:
+                    return self.bot.dispatch("purge_timeout", msgs, delay)
                 
-
             else:
                 x = [x for x in self.bot.mongo.automod.find()][0]
 
