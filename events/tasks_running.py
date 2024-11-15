@@ -54,7 +54,7 @@ class RunningTasks(commands.Cog):
         delay = self.bot.auto_purge.delay
         auto_purge_channel = self.bot.auto_purge.channel
 
-        if auto_purge_id is not None:
+        if auto_purge_id is not None and next_purge is not None:
             
             purge_time = datetime.fromisoformat(str(next_purge))
 
@@ -73,7 +73,9 @@ class RunningTasks(commands.Cog):
                 return self.bot.mongo.automod.update_one({"_id": x.get("_id")}, {"$set":{"automod_config":x['automod_config']}})
         else:
             self.bot.log.warning("Exiting Auto Purge process because the process is desactived.")
-            self.update_purge_time.cancel()
+            
+            if self.update_purge_time._can_be_cancelled():
+                return self.update_purge_time.cancel()
     
 
     async def getting_all_messages(self, channel: discord.TextChannel) -> list[discord.Message]:

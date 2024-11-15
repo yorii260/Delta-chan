@@ -26,24 +26,37 @@ class AutoDelete(Automod):
     
     @property
     def id_(self) -> dict | None:
-        return self.config.get("auto_delete_id") if self.config.get("auto_delete_id") != "" else None
-    
+        
+        try:
+            return self.config.get("auto_delete_id") 
+        except ValueError:
+            return None 
+        
+        
     @property
     def channel(self) -> discord.TextChannel | None:
-        channel = self.bot.get_channel(int(self.config.get("auto_delete_channel_id")))
-
-        if channel is not None:
-            return channel
-        else:
+        
+        try:
+            return self.bot.get_channel(int(self.config.get("auto_delete_channel_id")))
+        except ValueError:
             return None 
     
     @property
     def filter(self) -> str:
-        return self.config.get("auto_delete_filter")
-    
+        
+        try:
+            return self.config.get("auto_delete_filter")
+        except ValueError:
+            return None
+        
+        
     @property
     def type(self) -> str:
-        return self.config.get("auto_delete_type")
+        
+        try:
+            return self.config.get("auto_delete_type")
+        except ValueError:
+            return None
 
 
     def update(self, update: dict):
@@ -52,7 +65,6 @@ class AutoDelete(Automod):
         result = self.collection.update_one({"_id": x['_id']}, {"$set":{"automod_config":x['automod_config']}})
 
         return result.upserted_id
-        
     
 
 class AutoPurge(Automod):
@@ -66,35 +78,47 @@ class AutoPurge(Automod):
     
     @property
     def id_(self) -> str | None:
-        return self.config.get("auto_purge_id") if self.config.get("auto_purge_id") != "" else None
-    
+        
+        try:
+            return self.config.get("auto_purge_id")
+        except ValueError:
+            return None 
+        
+        
     @property
     def channel(self) -> discord.TextChannel | None:
-        channel = self.bot.get_channel(int(self.config.get("auto_purge_channel_id")))
-
-        if channel is not None:
-            return channel
-        else:
-            return None 
+        
+        try:
+            return self.bot.get_channel(int(self.config.get("auto_purge_channel_id")))
+        except ValueError:
+            return None
     
     @property
     def next_purge(self) -> datetime | None:
-        date = datetime.fromisoformat(str(self.config.get("next_purge")))
         
-        if date != "": return date 
-        else: return None 
+        try:
+            return datetime.fromisoformat(str(self.config.get("next_purge")))
+        except ValueError:
+            return None
+        
     
     @property
     def last_check(self) -> datetime | None:
-        lc = datetime.fromisoformat(str(self.config.get("last_check")))
-
-        if lc != "": return lc 
-        else: return None
+        
+        try:
+            return datetime.fromisoformat(str(self.config.get("last_check")))
+        except ValueError:
+            return None
     
     @property
     def delay(self) -> int:
-        return int(self.config.get("auto_purge_delay"))
-    
+        
+        try:
+            return int(self.config.get("auto_purge_delay"))
+        except ValueError:
+            return None 
+        
+        
     def update(self, update: dict):
         x = [x for x in self.collection.find()][0]
         x['automod_config']['auto_purge_config'].update(update)

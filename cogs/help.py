@@ -8,7 +8,9 @@ class HelpCog(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot 
         self.hidden_cogs = ['CommandsErrors', 'HelpCog', 'Mongo',
-                            'Reminder', 'Purge']
+                            'Reminder', 'Purge',
+                            'GeralEventListener',
+                            'RunningTasks']
         self.emotes = utils.Emotes()
         
         with open("src/assets/links.json", "r") as f:
@@ -32,8 +34,7 @@ class HelpCog(commands.Cog):
             for cog in cogs:
 
                 commands = [x for x in cog.get_commands() and cog.walk_commands()]
-                text = "";
-
+                text = ""
 
                 for command in commands:
                     

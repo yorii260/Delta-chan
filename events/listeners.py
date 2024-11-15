@@ -113,33 +113,37 @@ class GeralEventListener(commands.Cog):
 
         if ad_id is not None:
 
-            filter = self.bot.auto_delete.filter
-            type = self.bot.auto_delete.type
-            channel = self.bot.auto_delete.channel
-            
-
-            if (
-                not message.author.bot and 
-                message.channel.id == channel.id
-            ):
-                if filter != 'default':
-                    
-                    if type == "SW":
-                        filter = bool(message.content.lower().strip().startswith(filter.strip().lower()))
-                    elif type == "EW":
-                        filter = bool(message.content.strip().lower().endswith(filter.strip().lower()))
-                    else:
-                        pass
-
-                    self.bot.log.info(filter)
-                    
-                    
-                else:
-                    filter = True 
-
-                if filter:
+            try:
+                filter = self.bot.auto_delete.filter
+                type = self.bot.auto_delete.type
+                channel = self.bot.auto_delete.channel
                 
-                    return await message.delete()
+
+                if (
+                    not message.author.bot and 
+                    message.channel.id == channel.id
+                ):
+                    if filter != 'default':
+                        
+                        if type == "SW":
+                            filter = bool(message.content.lower().strip().startswith(filter.strip().lower()))
+                        elif type == "EW":
+                            filter = bool(message.content.strip().lower().endswith(filter.strip().lower()))
+                        else:
+                            return
+                        
+                    else:
+                        filter = True 
+
+                    if filter:
+                    
+                        return await message.delete()
+                    
+            except AttributeError:
+                return 
+        
+        else:
+            return
     
 
 async def setup(bot: commands.Bot):
